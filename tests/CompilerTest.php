@@ -348,7 +348,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
     public function testFlexibleIndentation()
     {
-        $this->assertEquals("<html><body><h1>Wahoo</h1><p>test</p></body></html>", $this->jade->render("html\n  body\n   h1 Wahoo\n   p test"));
+        $this->assertEquals("<html><body><h1>Wahoo</h1><p>test</p></body></html>", $this->jade->render("html\n  body\n   h1 Wahoo\n   p test", [], ['prettyprint' => false]));
     }
 
     public function testInterpolationValues()
