@@ -127,7 +127,6 @@ class Compiler {
         if ($interpolate) {
             preg_match('/(\\\\)?([#!]){((?:.|\n)*)/sim', $str, $match, PREG_OFFSET_CAPTURE);
             echo "############### BUFFER ###################\n".$str."\n";
-            var_dump($match);
             if ($match) {
                 /** match.index */
                 $this->buffer(mb_substr($str,0, $match[0][1]), false);
@@ -140,8 +139,10 @@ class Compiler {
                         $rest = $match[3][0];
                         $range = $this->parseJSExpression($rest);
                         $code = $this->convertJStoPHP($range->src);
-                        $code = (('!' == $match[2][0] ? '' : 'phade_escape') . '( ' . $code .')');
-
+                        if (strlen($code))
+                            $code = (('!' == $match[2][0] ? '' : 'phade_escape') . '( ' . $code .')');
+                        else
+                            $code = "''";
                     } catch (\Exception $ex) {
                         //didn't $match, just as if escaped
                         $this->buffer($match[2][0] . '{', false);
@@ -732,6 +733,15 @@ class Compiler {
     private function convertJStoPHP($src) {
         $isVar = $newVar = true;
         $phpSrc='';
+        var_dump($src);
+        if (ctype_digit($src) || __()->isNumber($src)) {
+            return $src;
+        }
+        if ( $this->characterParser->isType($src))
+            return "'$src'";
+        if ($this->characterParser->isNull($src))
+            return '';
+
         for($i = 0,$len = strlen($src);$i<$len;++$i) {
             if ($isVar && $newVar && " " != $src[$i] && !$this->characterParser->isNonChar($src[$i])) {
                 $phpSrc .= '$';
@@ -747,10 +757,15 @@ class Compiler {
 
         if (strpos($phpSrc,'||') !== false) {
             $array = explode('||', $phpSrc);
-            array_walk($array, function(&$value, $key) { trim($value); });
+            array_walk($array, function(&$value, $key) { $value = trim($value); });
+            var_dump($array);
+            if (($i = __()->indexOf($array,'$undefined'))>=0) {
+                unset($array[$i]);
+                return array_pop($array);
+            }
             $phpSrc =  $array[0] .'?'. $array[0] .':'.$array[1];
         } else
-            $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
+            return $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
         return $phpSrc;
     }
 } 

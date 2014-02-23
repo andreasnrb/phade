@@ -1,5 +1,6 @@
 <?php
 namespace Phade;
+include "../vendor/cyonite/underscore.php/lib/skillshare/underscore.php";
 
 use Phade\Exceptions\PhadeParseException;
 

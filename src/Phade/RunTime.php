@@ -69,7 +69,7 @@ function phade_attrs($obj, $escaped){
  * @param $html
  * @return string
  */
-function phade_escape($html){
+function phade_escape($html = ''){
     return htmlspecialchars($html);
 };
 

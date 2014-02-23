@@ -198,7 +198,18 @@ class CharacterParser {
         return false;
     }
 
-
+    function isNull($src) {
+        return is_null($src) || $src == 'null' || $src == 'undefined' || empty($src);
+    }
+    function isType($src) {
+        switch($src) {
+            case 'false':
+            case 'true':
+                return true;
+            default:
+                return false;
+        }
+    }
     function isKeyword($id) {
         return ($id === 'if') || ($id === 'in') || ($id === 'do') || ($id === 'var') || ($id === 'for') || ($id === 'new') ||
         ($id === 'try') || ($id === 'let') || ($id === 'this') || ($id === 'else') || ($id === 'case') ||
