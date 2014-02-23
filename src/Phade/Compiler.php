@@ -428,6 +428,7 @@ class Compiler {
      * attributes, visiting the `tag`'s code and block.
      *
      * @param Tag $tag
+     * @throws Exceptions\PhadeException
      * @api public
      */
     public function visitTag($tag) {
@@ -438,6 +439,7 @@ class Compiler {
             if ($tag->buffer) $this->bufferExpression($name);
             else $this->buffer($name);
         };
+        if ('pre' == $tag->name) $this->escape = true;
 
         if (!$this->hasCompiledTag) {
             if (!$this->hasCompiledDoctype && 'html' == $name) {
@@ -447,9 +449,9 @@ class Compiler {
         }
 
         // pretty print
-        if ($pp && !$tag->isInline() && !$tag->canInline())
+        if ($pp && !$tag->isInline())
             $this->prettyIndent(0, true);
-        echo "visitTag ".$name."\n";
+
         if ((in_array(strtolower($name), $this->selfClosing) || $tag->selfClosing) && !$this->xml) {
             $this->buffer('<');
             $bufferName();
@@ -457,38 +459,26 @@ class Compiler {
             $this->terse
                 ? $this->buffer('>')
                 : $this->buffer('/>');
-        } else {
-            // Optimize attributes buffering
-            if (sizeof($tag->getAttributes())) {
-                $this->buffer('<');
-                $bufferName();
-                if (sizeof($tag->getAttributes())) $this->visitAttributes($tag->getAttributes());
-                $this->buffer('>');
-            } else {
-                $this->buffer('<');
-                $bufferName();
-                $this->buffer('>');
+            // if it is non-empty throw an error
+            if ($tag->block && !($tag->block->isBlock() && sizeof($tag->block->getNodes()) === 0)
+                &&  __()->some($tag->block->getNodes(),function ($tag) { return $tag->type !== 'Text' || !(mb_ereg_match('/^\s*$/', $tag->val));})) {
+                throw new PhadeException($name . ' is self closing and should not have content.');
             }
-            if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->canInline())
-                $this->prettyIndent(1, true);
-
+        } else {
+            $this->buffer('<');
+            $bufferName();
+            if (sizeof($tag->getAttributes())) $this->visitAttributes($tag->getAttributes());
+            $this->buffer('>');
             if ($tag->code) $this->visitCode($tag->code);
-            $this->escape = 'pre' == $tag->name;
             $this->visit($tag->block);
 
-            // pretty print
             if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->canInline())
                 $this->prettyIndent(0, true);
             $this->buffer('</');
             $bufferName();
             $this->buffer('>');
-            // pretty print
-            if ($pp && !$tag->isInline() && !$tag->canInline())
-                $this->prettyIndent(0, true);
-            elseif ($pp)
-                $this->buffer("\n");
-
         }
+        if ('pre' == $tag->name) $this->escape = false;
         $this->indents--;
     }
 

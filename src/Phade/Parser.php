@@ -659,13 +659,6 @@ class Parser
 
     private function parseTag()
     {
-        echo __METHOD__, "1\n";
-        // ast-filter look-ahead
-        $i = 2;
-        if ('attrs' == $this->lookahead($i)->getType()) ++$i;
-
-        echo __METHOD__, "2\n";
-
         $tok = $this->advance();
         $tag = new Tag($tok->val);
         $tag->selfClosing = $tok->selfClosing;
@@ -723,10 +716,15 @@ class Parser
             $this->advance();
         }
 
+        if ($tag->selfClosing
+            && __(['newline', 'outdent', 'eos'])->indexOf($this->peek()->getType()) === -1
+            && ($this->peek()->getType() !== 'text' || preg_match('/^\s*$/',$this->peek()->val))) {
+            throw new PhadeException($tag->name . ' is self closing and should not have content.');
+        }
+
         // (text | code | ':')?
-        switch ($type = $this->peek()->getType()) {
+        switch ($this->peek()->getType()) {
             case 'text':
-                echo 'THIS IS TEXT';
                 $tag->block->push($this->parseText());
                 break;
             case 'code':
@@ -741,8 +739,6 @@ class Parser
             case 'indent':
             case 'outdent':
             case 'eos':
-            echo "the type: $type\n";
-
             break;
             default:
                 throw new PhadeException('Unexpected token `' . $this->peek()->getType() . '` expected `text`, `code`, `:`, `newline` or `eos`');
@@ -751,20 +747,8 @@ class Parser
         // newline*
         while ('newline' == $this->peek()->getType()) $this->advance();
 
-        $tag->textOnly = $tag->textOnly || in_array($tag->name, $this->textOnly);
-
-        // script special-case
-        if ('script' == $tag->name) {
-            $type = $tag->getAttribute('type');
-            if (!$dot && $type && 'text/javascript' != preg_replace('/^[\'"]|[\'"]$/', '', $type)) {
-                $tag->textOnly = false;
-            }
-        }
-        $type = $this->peek()->getType();
-        echo "the type2: $type\n";
-
         //$block?
-        if ('indent' == $type) {
+        if ('indent' == $this->peek()->getType()) {
             if ($tag->textOnly) {
                 $this->lexer->pipeless = true;
                 $tag->block = $this->parseTextBlock();

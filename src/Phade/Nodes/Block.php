@@ -9,7 +9,7 @@ class Block extends Node {
     public $appended;
     public $mode;
     public $parser;
-    protected $isBlock = true;
+    public $isBlock = true;
 
     /**
      * @var bool

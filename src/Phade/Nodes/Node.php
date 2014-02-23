@@ -21,8 +21,9 @@ class Node {
     public $val;
     public $buffer;
     public $escape;
-    protected $isBlock = false;
     public $isInline = false;
+    public $isBlock = false;
+
     public function isText()
     {
         return false;

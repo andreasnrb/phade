@@ -18,7 +18,7 @@ class Jade
     public function render($str, $scope = [], $options = [], $callback = null)
     {
         $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => true, 'cache' => null];
-
+        $str = trim($str, "\n");
         $fn = null;
         // support callback API
         if (is_callable($callback)) {
