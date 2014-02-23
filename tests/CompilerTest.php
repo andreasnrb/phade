@@ -284,14 +284,15 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         $html = join("\n", [
             '<html>',
-            '<head>',
-            'test',
-            '</head>',
-            '<body></body>',
-            '</html>'
+            '  <head>',
+            '    test',
+            '  </head>',
+            '  <body></body>',
+            '</html>',
+            ''
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => true]));
         $this->assertEquals('<foo></foo>something<bar></bar>', $this->jade->render("foo\n= \"something\"\nbar", [], ['prettyprint' => false]));
         $this->assertEquals('<foo></foo>something<bar></bar>else', $this->jade->render("foo\n= \"something\"\nbar\n= \"else\"", [], ['prettyprint' => false]));
     }

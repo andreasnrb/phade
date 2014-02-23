@@ -101,7 +101,7 @@ class Compiler {
         if ($this->pp) array_push($this->buf, '$phade_indent = [];');
         $this->lastBufferedIdx = -1;
         $this->visit($this->node);
-        return join($this->buf,"");
+        return join("\n", $this->buf);
     }
 
     /**
@@ -174,7 +174,7 @@ class Compiler {
      */
     public function bufferExpression($src) {
         if ($this->isConstant($src)) {
-            $this->buffer($this->parseCode($src), false);
+            $this->buffer('" . ' .$this->parseCode($src). ' . "', false);
             return;
         }
         if ($this->lastBufferedIdx == sizeof($this->buf)) {
@@ -201,8 +201,8 @@ class Compiler {
      */
 
     public function prettyIndent($offset = 0, $newline = false){
-        $newline = $newline ? "\n" : '';
-        $this->buffer($newline . join(array_fill (0,$this->indents + $offset,''),'  '));
+        $newline = $newline ? "\n" : "";
+        $this->buffer($newline . join(array_fill (0,$this->indents + $offset,""),"  "));
         if ($this->parentIndents)
             array_push($this->buf, 'array_push($buf, array_map($buf, \'phade_indent\');');
     }
@@ -447,8 +447,8 @@ class Compiler {
         }
 
         // pretty print
-        if ($pp && !$tag->isInline())
-            $this->prettyIndent(0, false);
+        if ($pp && !$tag->isInline() && !$tag->canInline())
+            $this->prettyIndent(0, true);
         echo "visitTag ".$name."\n";
         if ((in_array(strtolower($name), $this->selfClosing) || $tag->selfClosing) && !$this->xml) {
             $this->buffer('<');
@@ -469,16 +469,25 @@ class Compiler {
                 $bufferName();
                 $this->buffer('>');
             }
+            if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->canInline())
+                $this->prettyIndent(1, true);
+
             if ($tag->code) $this->visitCode($tag->code);
             $this->escape = 'pre' == $tag->name;
             $this->visit($tag->block);
 
             // pretty print
             if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->canInline())
-                $this->prettyIndent(0, false);
+                $this->prettyIndent(0, true);
             $this->buffer('</');
             $bufferName();
             $this->buffer('>');
+            // pretty print
+            if ($pp && !$tag->isInline() && !$tag->canInline())
+                $this->prettyIndent(0, true);
+            elseif ($pp)
+                $this->buffer("\n");
+
         }
         $this->indents--;
     }
@@ -560,9 +569,9 @@ class Compiler {
         // Buffer code
         if ($code->buffer) {
             $val = ltrim($code->val);
-
             $val = $this->parseCode($val);
-            $val = 'null == ($phade_interp = ' . $val . ') ? "" : $phade_interp';
+            if(strpos($val, '$') !== false)
+                $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';
             if ($code->escape) $val = 'phade_escape(' . $val . ')';
             $this->bufferExpression($val);
         } else {
@@ -578,7 +587,7 @@ class Compiler {
     }
     private function parseCode($code) {
         if ($this->isConstant($code))
-            return '$' . $code;
+            return $code;
         if (preg_match('/.*\((?<!\$)([a-zA-Z]+)\).*/', $code, $captures)) {
             $inner_code = $captures[1];
             $val = "\$".$inner_code;

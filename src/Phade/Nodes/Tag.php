@@ -75,7 +75,8 @@ class Tag extends Attrs
         if (1 == sizeof($nodes)) return $isInline($nodes[0]);
 
         // Multi-line inline-only tag
-        if (array_walk($this->block->getNodes(), $isInline)) {
+        $nodes = $this->block->getNodes();
+        if (array_walk($nodes, $isInline)) {
             for ($i = 1, $len = sizeof($nodes); $i < $len; ++$i) {
                 if ($nodes[$i - 1]->isText() && $nodes[$i]->isText())
                     return false;
