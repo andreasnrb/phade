@@ -330,20 +330,20 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
     public function testTagTextBlock()
     {
-
-        $this->assertEquals("<p>foo \nbar \nbaz</p>", $this->jade->render("p\n  | foo \n  | bar \n  | baz"));
-        $this->assertEquals("<label>Password:<input/></label>", $this->jade->render("label\n  | Password:\n  input"));
-        $this->assertEquals("<label>Password:<input/></label>", $this->jade->render("label Password:\n  input"));
+        $this->assertEquals("<p>foo \nbar \nbaz</p>", $this->jade->render("p\n  | foo \n  | bar \n  | baz", [], ['prettyprint' => false]));
+        $this->assertEquals("<label>Password:<input/></label>", $this->jade->render("label\n  | Password:\n  input", [], ['prettyprint' => false]));
+        $this->assertEquals("<label>Password:<input/></label>", $this->jade->render("label Password:\n  input", [], ['prettyprint' => false]));
     }
 
     public function testTagTextInterpolation()
     {
-        $this->assertEquals("yo, jade is cool", $this->jade->render("| yo, #{name} is cool\n", "{ name: 'jade' }"));
-        $this->assertEquals("<p>yo, jade is cool</p>", $this->jade->render("p yo, #{name} is cool", "{ name: 'jade' }"));
-        $this->assertEquals("yo, jade is cool", $this->jade->render('| yo, #{name || "jade"} is cool", "{ name: null }'));
-        $this->assertEquals("yo, 'jade' is cool", $this->jade->render('| yo, #{name || "\'jade\'"} is cool", "{ name: null }'));
-        $this->assertEquals("foo &lt;script&gt; bar", $this->jade->render("| foo #{code} bar", "{ code: '<script>' }"));
-        $this->assertEquals("foo <script> bar", $this->jade->render("| foo !{code} bar", "{ code: '<script>' }"));
+        $this->assertEquals("yo, jade is cool", $this->jade->render("| yo, #{name} is cool\n", ['name' => 'jade']));
+        $this->assertEquals("<p>yo, jade is cool</p>", $this->jade->render("p yo, #{name} is cool", ['name' => 'jade']));
+        $this->assertEquals("yo, jade is cool", $this->jade->render('| yo, #{name || "jade"} is cool', ['name' => null]));
+        $this->assertEquals("yo, 'jade' is cool", $this->jade->render('| yo, #{name || "\'jade\'"} is cool', ['name' => null]));
+        $this->assertEquals("foo &lt;script&gt; bar", $this->jade->render("| foo #{code} bar", ['code' => '<script>']));
+        $this->assertEquals("foo <script> bar", $this->jade->render("| foo !{code} bar", ['code' => '<script>']));
+
     }
 
     public function testFlexibleIndentation()

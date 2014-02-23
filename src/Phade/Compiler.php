@@ -126,7 +126,8 @@ class Compiler {
     public function buffer($str, $interpolate = false) {
         if ($interpolate) {
             preg_match('/(\\\\)?([#!]){((?:.|\n)*)/sim', $str, $match, PREG_OFFSET_CAPTURE);
-            echo "############### BUFFER ###################\n".$str;
+            echo "############### BUFFER ###################\n".$str."\n";
+            var_dump($match);
             if ($match) {
                 /** match.index */
                 $this->buffer(mb_substr($str,0, $match[0][1]), false);
@@ -138,7 +139,8 @@ class Compiler {
                     try {
                         $rest = $match[3][0];
                         $range = $this->parseJSExpression($rest);
-                        $code = ('!' == $match[2][0] ? '' : 'phade_escape') . '(($phade_interp = (' . $range->src . ')) == null ? \'\' : $phade_interp)';
+                        $code = $this->convertJStoPHP($range->src);
+                        $code = (('!' == $match[2][0] ? '' : 'phade_escape') . '( ' . $code .')');
 
                     } catch (\Exception $ex) {
                         //didn't $match, just as if escaped
@@ -359,7 +361,6 @@ class Compiler {
      * @param {Mixin} mixin
      * @api public
      */
-
     public function visitMixin($mixin) {
         $name = preg_replace('/-/', '_', $mixin->name) . '_mixin';
         $args = $mixin->arguments || '';
@@ -487,7 +488,6 @@ class Compiler {
      *
      * @param Filter $filter
      */
-
     public function visitFilter($filter){
         $text = join(array_map(function($node){ return $node->value; }
             ,$filter->block->getNodes()),"\n");
@@ -503,7 +503,6 @@ class Compiler {
      * @param Text $text
      * @api public
      */
-
     public function visitText($text){
         $this->buffer($text->val, true);
     }
@@ -514,7 +513,6 @@ class Compiler {
      * @param Comment $comment
      * @api public
      */
-
     public function visitComment($comment){
         if (!$comment->buffer) return;
         if ($this->pp) $this->prettyIndent(1, true);
@@ -551,7 +549,6 @@ class Compiler {
      * @param Code $code
      * @api public
      */
-
     public function visitCode($code){
         // Wrap code blocks with {}.
         // we only wrap unbuffered code blocks ATM
@@ -575,6 +572,12 @@ class Compiler {
             if (!$code->buffer) array_push($this->buf, '}');
         }
     }
+
+    /**
+     *
+     * @param $code
+     * @return mixed
+     */
     private function parseCode($code) {
         if ($this->isConstant($code))
             return $code;
@@ -585,13 +588,13 @@ class Compiler {
         }
         return $code;
     }
+
     /**
      * Visit `each` block.
      *
      * @param Each $each
      * @api public
      */
-
     public function visitEach($each){
         array_push($this->buf, ''
             . '// iterate ' . $each->obj ."\n"
@@ -641,7 +644,6 @@ class Compiler {
      * @param Array $attrs
      * @api public
      */
-
     public function visitAttributes($attrs) {
         echo __METHOD__,"\n";
         if (!$attrs)
@@ -660,7 +662,6 @@ class Compiler {
     /**
      * Compile attributes.
      */
-
     public function attrs($attrs){
         $buf = [];
         $classes = [];
@@ -694,10 +695,19 @@ class Compiler {
             "constant" => $constant
         ];
     }
+
+    /**
+     * @param $rest
+     * @return \stdClass
+     */
     private function parseJSExpression($rest) {
         return $this->characterParser->parseMax($rest);
     }
 
+    /**
+     * @param $src
+     * @return bool
+     */
     private function isConstant($src) {
         if (strpos($src, '$') !== false)
             return false;
@@ -717,5 +727,30 @@ class Compiler {
         if ($this->isConstant($string))
             return $string;
         throw new PhadeException(sprintf('Not a constant %s',  $string));
+    }
+
+    private function convertJStoPHP($src) {
+        $isVar = $newVar = true;
+        $phpSrc='';
+        for($i = 0,$len = strlen($src);$i<$len;++$i) {
+            if ($isVar && $newVar && " " != $src[$i] && !$this->characterParser->isNonChar($src[$i])) {
+                $phpSrc .= '$';
+                $isVar = $newVar = false;
+            } elseif ($this->characterParser->isNonChar($src[$i])) {
+                $isVar = false;
+                $newVar = false;
+            } elseif (" " == $src[$i]) {
+                $newVar = $isVar = true;
+            }
+            $phpSrc .= $src[$i];
+        }
+
+        if (strpos($phpSrc,'||') !== false) {
+            $array = explode('||', $phpSrc);
+            array_walk($array, function(&$value, $key) { trim($value); });
+            $phpSrc =  $array[0] .'?'. $array[0] .':'.$array[1];
+        } else
+            $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
+        return $phpSrc;
     }
 } 

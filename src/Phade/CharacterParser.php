@@ -129,7 +129,10 @@ class CharacterParser {
 
 
     public static function isPunctuator($c) {
-        $code = ord($c[0]);
+        if (strlen($c)>1)
+            $code = ord($c[0]);
+        else
+            $code = ord($c);
         switch ($code) {
             case 46: // . dot
             case 40: // ( open bracket
@@ -161,6 +164,19 @@ class CharacterParser {
         }
     }
 
+    function isNonChar($c) {
+        if (strlen($c)>1)
+            $code = ord($c[0]);
+        else
+            $code = ord($c);
+        switch ($code) {
+            case 34: // "
+            case 39: // '
+                return true;
+            default:
+                return $this->isPunctuator($c);
+        }
+    }
     function isRegexp($history) {
         //could be start of regexp or divide sign
 
