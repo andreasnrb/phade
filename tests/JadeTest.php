@@ -9,8 +9,6 @@ use Phade\Nodes\Tag;
 class JadeTest extends \PHPUnit_Framework_TestCase
 {
 
-//var perfTest = fs.readFileSync(__dirname + '/fixtures/perf.jade', 'utf8')
-
     /**
      * @var Jade $jade
      */
@@ -50,7 +48,6 @@ class JadeTest extends \PHPUnit_Framework_TestCase
     {
         $tester = $this;
         $this->jade->render('p bar', [], ["cache" => true], function ($err, $str) use (&$tester) {
-            var_dump($err->getMessage());
             $tester->assertTrue(1 == preg_match('/the "filename" option is required for caching/', $err->getMessage()));
         });
 
@@ -112,4 +109,3 @@ class JadeTest extends \PHPUnit_Framework_TestCase
              $this->jade->compile(perfTest, {})
      }*/
 }
- 

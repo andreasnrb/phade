@@ -45,17 +45,17 @@ class Compiler {
     private $doctypes = [
         '5' =>'<!DOCTYPE html>'
         , 'default' => '<!DOCTYPE html>'
-        , 'xml' => '<?xml version="1.0" encoding="utf-8" ?>'
-        , 'transitional' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
-        , 'strict' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'
-        , 'frameset' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">'
-        , '1.1' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">'
-        , 'basic' => '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN" "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">'
-        , 'mobile' => '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">'
+        , 'xml' => '<?xml version=\"1.0\" encoding=\"utf-8\" ?>'
+        , 'transitional' => '<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">'
+        , 'strict' => '<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">'
+        , 'frameset' => '<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">'
+        , '1.1' => '<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">'
+        , 'basic' => '<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML Basic 1.1//EN\" \"http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd\">'
+        , 'mobile' => '<!DOCTYPE html PUBLIC \"-//WAPFORUM//DTD XHTML Mobile 1.2//EN\" \"http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd\">'
     ];
     private $doctype;
     private $xml;
-    private $terse = true;
+    private $terse = false;
     /**
      * @var CharacterParser
      */
@@ -79,7 +79,6 @@ class Compiler {
         $this->filename = $filename;
         $this->options = $options;
         $this->node = $node;
-        var_dump($node);
         $this->hasCompiledDoctype = false;
         $this->hasCompiledTag = false;
         $this->pp = $options->prettyprint;
@@ -87,8 +86,8 @@ class Compiler {
         $this->inMixin = false;
         $this->indents = 0;
         $this->parentIndents = 0;
-        if (isset($options->doctype))
-            $this->setDoctype($options->doctype);
+        if (isset($options->doctype) && !empty($options->doctype))
+           $this->setDoctype($options->doctype);
     }
 
     /**
@@ -111,11 +110,10 @@ class Compiler {
      * and boolean attributes are not mirrored.
      * @param $name
      */
-    public function setDoctype($name) {
-        $name = $name || 'default';
-        $this->doctype = $this->doctypes[strtolower($name)] || "<!DOCTYPE $name >";
+    public function setDoctype($name = 'default') {
+        $this->doctype = isset($this->doctypes[strtolower($name)])? $this->doctypes[strtolower($name)] : "<!DOCTYPE $name>";
         $this->terse = strtolower($this->doctype) == '<!doctype html>';
-        $this->xml = 0 == strpos($this->doctype, '<?xml');
+        $this->xml = 0 === strpos($this->doctype, '<?xml');
     }
 
     /**
@@ -129,7 +127,6 @@ class Compiler {
         if ($interpolate) {
             preg_match('/(\\\\)?([#!]){((?:.|\n)*)/sim', $str, $match, PREG_OFFSET_CAPTURE);
             echo "############### BUFFER ###################\n".$str;
-            var_dump($match);
             if ($match) {
                 /** match.index */
                 $this->buffer(mb_substr($str,0, $match[0][1]), false);
@@ -150,9 +147,7 @@ class Compiler {
                         return;
                     }
                     $this->bufferExpression($code);
-                    var_dump($this->buf);
                     $this->buffer(mb_substr($rest, $range->end + 1), true);
-                    var_dump($this->buf);
                     return;
                 }
             }
@@ -251,6 +246,7 @@ class Compiler {
 
     public function visitNode($node){
         $name = basename(get_class($node));
+        echo __METHOD__ . " $name\n";
         return $this->{'visit' . $name}($node);
     }
 
@@ -349,7 +345,7 @@ class Compiler {
      */
     public function visitDoctype($doctype = null) {
         if ($doctype && ($doctype->val || !$this->doctype)) {
-            $this->setDoctype($doctype->val || 'default');
+            $this->setDoctype($doctype->val);
         }
 
         if ($this->doctype) $this->buffer($this->doctype);
@@ -453,6 +449,7 @@ class Compiler {
         // pretty print
         if ($pp && !$tag->isInline())
             $this->prettyIndent(0, false);
+        echo "visitTag ".$name."\n";
         if ((in_array(strtolower($name), $this->selfClosing) || $tag->selfClosing) && !$this->xml) {
             $this->buffer('<');
             $bufferName();
@@ -650,15 +647,14 @@ class Compiler {
         echo __METHOD__,"\n";
         if (!$attrs)
             return;
-        var_dump($attrs);
         $val = $this->attrs($attrs);
         if ($val->inherits) {
             $this->bufferExpression("jade.attrs(jade.merge({ " . $val->buf .
                 " }, attributes), jade.merge(" . $val->escaped . ", escaped, true))");
         } else if ($val->constant) {
-            $this->buffer(phade_attrs($this->toConstant('[' . $val->buf . ']'), json_decode($val->escaped)));
+            $this->buffer(phade_attrs($val->buf, $val->escaped));
         } else {
-            $this->bufferExpression('$phade_attrs({ ' . $val->buf . " }, " . $val->escaped . ")");
+//            $this->bufferExpression('$phade_attrs({ ' . $val->buf . " }, " . $val->escaped . ")");
         }
     }
 
@@ -679,20 +675,22 @@ class Compiler {
             if ($attr->name == 'attributes') return $inherits = true;
             $escaped[$attr->name] = $attr->escaped;
             if ($attr->name == 'class') {
-                array_push($classes, '(' . $attr->val . ')');
+                array_push($classes, $attr->val);
             } else {
-                $pair = "'" . $attr->name . "':(" . $attr->val . ')';
-                array_push($buf, $pair);
+                array_push($buf, $attr);
             }
         }
 
         if (sizeof($classes)) {
-            array_push($buf, '"class": [' . join($classes,',') . ']');
+            $attr = new \stdClass();
+            $attr->name = 'class';
+            $attr->val = join($classes,' ');
+            array_push($buf, $attr);
         }
 
         return (object)[
-            "buf" => join($buf,', '),
-            "escaped" => json_encode($escaped),
+            "buf" => $buf,
+            "escaped" => $escaped,
             "inherits" => $inherits,
             "constant" => $constant
         ];

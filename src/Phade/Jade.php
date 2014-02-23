@@ -6,12 +6,14 @@ use Phade\Exceptions\PhadeParseException;
 class Jade
 {
     private $cache;
+
     /**
      * @param $str
      * @param array $scope
      * @param array $options
-     * @return mixed
+     * @param null $callback
      * @throws \Exception
+     * @return mixed
      */
     public function render($str, $scope = [], $options = [], $callback = null)
     {
@@ -24,31 +26,31 @@ class Jade
         }
         $options = array_merge($default, $options);
 
-  if (is_callable($fn)) {
-    try {
-        $res = $this->render($str, $scope, $options);
-    } catch (\Exception $ex) {
-        return $fn($ex, null);
-    }
-    return $fn(null, $res);
-  }
-  // cache requires .filename
-  if ($options['cache'] && empty($options['filename'])) {
-      throw new \Exception('the "filename" option is required for caching');
-  }
+        if (is_callable($fn)) {
+            try {
+                $res = $this->render($str, $scope, $options);
+            } catch (\Exception $ex) {
+                return $fn($ex, null);
+            }
+            return $fn(null, $res);
+        }
+        // cache requires .filename
+        if ($options['cache'] && empty($options['filename'])) {
+            throw new \Exception('the "filename" option is required for caching');
+        }
 
         $path = $options['filename'];
         if ($options['cache']) {
             $tmpl = $this->cache[$path] or $tmpl = ($this->cache[$path] = $this->compile($str, $scope, $options));
         } else {
-            $tmpl =  $this->compile($str, $scope, $options);
+            $tmpl = $this->compile($str, $scope, $options);
         }
         return $tmpl($options);
     }
 
     public function compile($str, $scope = [], $options = [])
     {
-        echo __METHOD__,"\n";
+        echo __METHOD__, "\n";
         $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => true];
         $options = array_merge($default, $options);
         if (is_array($options))
@@ -71,7 +73,7 @@ class Jade
         };
         //$fn = function($locals, $jade = null) use (&$fn) { return $fn($locals);};
         return function ($locals = []) use (&$fn, &$scope) {
-            echo $fn,"\n";
+            echo $fn, "\n";
             ob_start();
             extract($locals);
             extract($scope);
@@ -91,8 +93,8 @@ class Jade
      */
     private function parse($str, $options = [])
     {
-        echo __METHOD__,"\n";
-        echo $str,"\n";
+        echo __METHOD__, "\n";
+        echo $str, "\n";
         if (is_array($options))
             $options = (object)$options;
         $parserClass = (isset($options->parser)) ? $options->parser : 'Phade\\Parser';
@@ -117,21 +119,21 @@ class Jade
             array_push($globals, 'jade');
             array_push($globals, 'buf');
 
-            return join("\n",[''
-            , '$buf = [];'
-/*            , (isset($options->self)
-                ?*/
-              //, '$self = $locals;' ."\n"
+            return join("\n", [''
+                , '$buf = [];'
+                /*            , (isset($options->self)
+                                ?*/
+                //, '$self = $locals;' ."\n"
                 , $php
-            //    : $this->addWith('$locals', $php, $globals)) . ';'
-            , 'return join("\n", $buf);']);
+                //    : $this->addWith('$locals', $php, $globals)) . ';'
+                , 'return join("\n", $buf);']);
         } catch (\Exception $ex) {
             /**
              * @var Parser $context
              */
             $context = $parser->context();
 
-            return new PhadeParseException('Parser error', $context->getFilename(), $context->getLexer()->getLineno(), $context->getInput(),$ex);
+            return new PhadeParseException('Parser error', $context->getFilename(), $context->getLexer()->getLineno(), $context->getInput(), $ex);
         }
     }
 }

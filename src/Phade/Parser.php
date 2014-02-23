@@ -88,7 +88,6 @@ class Parser
                 $block->push($this->parseExpr());
             }
         }
-
         if ($parser = $this->extending) {
             $this->context($parser);
             $ast = (array)$parser->parse();
@@ -122,8 +121,6 @@ class Parser
     {
         echo __METHOD__, "\n";
         $token = $this->lexer->advance();
-        var_dump($token);
-
         return $token;
     }
 
@@ -351,7 +348,9 @@ class Parser
 
     private function parseDoctype()
     {
+        echo __METHOD__ ."\n";
         $tok = $this->expect('doctype');
+        echo "token: \n";
         $node = new Doctype($tok->val);
         $node->line = $this->line();
         return $node;
@@ -668,10 +667,7 @@ class Parser
         echo __METHOD__, "2\n";
 
         $tok = $this->advance();
-        var_dump($tok);
-
         $tag = new Tag($tok->val);
-var_dump($tag);
         $tag->selfClosing = $tok->selfClosing;
 
         return $this->tag($tag);
@@ -697,9 +693,10 @@ var_dump($tag);
                 case 'id':
                 case 'class':
                     $tok = $this->advance();
-                    $tag->setAttribute($tok->getType(), "'" . $tok->val . "'");
+                    $tag->setAttribute($tok->getType(), $tok->val);
                     continue;
                 case 'attrs':
+                case 'attributes':
                     if ($seenAttrs) {
                         throw new PhadeException('You should not have jade tags with multiple attributes.');
                     }
@@ -710,9 +707,7 @@ var_dump($tag);
                     $names = array_keys($obj);
 
                     if ($tok->selfClosing) $tag->selfClosing = true;
-
-                    for ($i = 0, $len = sizeof($names); $i < $len; ++$i) {
-                        $name = $names[$i];
+                    foreach($names as $name) {
                         $val = $obj[$name];
                         $tag->setAttribute($name, $val, $escaped[$name]);
                     }
@@ -724,13 +719,14 @@ var_dump($tag);
 
         // check immediate '.'
         if ('dot' == $this->peek()->getType()) {
-            $dot = $tag->textOnly = true;
+            $tag->textOnly = true;
             $this->advance();
         }
 
         // (text | code | ':')?
-        switch ($this->peek()->getType()) {
+        switch ($type = $this->peek()->getType()) {
             case 'text':
+                echo 'THIS IS TEXT';
                 $tag->block->push($this->parseText());
                 break;
             case 'code':
@@ -745,7 +741,9 @@ var_dump($tag);
             case 'indent':
             case 'outdent':
             case 'eos':
-                break;
+            echo "the type: $type\n";
+
+            break;
             default:
                 throw new PhadeException('Unexpected token `' . $this->peek()->getType() . '` expected `text`, `code`, `:`, `newline` or `eos`');
         }
@@ -762,14 +760,12 @@ var_dump($tag);
                 $tag->textOnly = false;
             }
         }
+        $type = $this->peek()->getType();
+        echo "the type2: $type\n";
 
         //$block?
-        if ('indent' == $this->peek()->getType()) {
+        if ('indent' == $type) {
             if ($tag->textOnly) {
-                if (!$dot) {
-                    throw new PhadeException($this->filename . ', line ' . $this->peek()->line . ':' .
-                    'Implicit textOnly for `script` and `style` is deprecated.  Use `script.` or `style.` instead.');
-                }
                 $this->lexer->pipeless = true;
                 $tag->block = $this->parseTextBlock();
                 $this->lexer->pipeless = false;

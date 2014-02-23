@@ -25,37 +25,40 @@ function phade_attrs($obj, $escaped){
     $buf = [];
     $terse = $obj;
     //delete $obj->terse;
-    $keys = array_keys(get_object_vars($obj));
-  $len = sizeof($keys);
+    echo "phade_attrs:\n";
+    var_dump($obj);
+    $keys = array_keys($obj);
+    $len = sizeof($keys);
 
   if ($len) {
       array_push($buf,'');
       for ($i = 0; $i < $len; ++$i) {
-          $key = $keys[$i];
-        $val = $obj[$key];
+          $attr = $obj[$i];
+        $key = $attr->name;
+        $val = $attr->val;
 
       if (is_bool($val) || null == $val) {
               if ($val) {
                   $terse
                       ? array_push($buf, $key)
-                      : array_push($buf, $key . '="' . $key . '"');
+                      : array_push($buf, $key . '=\"' . $key . '\"');
               }
           } else if (0 === strpos($key,'data') && !is_string($val)) {
               array_push($buf, $key . "='" . preg_replace("/'/", '&apos;', json_encode($val)) . "'");
       } else if ('class' == $key) {
         if ($escaped && $escaped[$key]){
           if ($val = phade_escape(phade_join_classes($val))) {
-            array_push($buf, $key . '="' . $val . '"');
+            array_push($buf, $key . '=\"' . $val . '\"');
           }
         } else {
           if ($val = phade_join_classes($val)) {
-            array_push($buf, $key . '="' . $val . '"');
+            array_push($buf, $key . '=\"' . $val . '\"');
           }
         }
       } else if ($escaped && $escaped[$key]) {
-        array_push($buf, $key . '="' . phade_escape($val) . '"');
+        array_push($buf, $key . '=\"' . phade_escape($val) . '\"');
       } else {
-        array_push($buf, $key . '="' . $val . '"');
+        array_push($buf, $key . '=\"' . $val . '\"');
       }
     }
   }

@@ -10,9 +10,11 @@ namespace Phade\Nodes;
 
 
 class Text extends Node {
-
-    public function __construct($val)
-    {
+    public function __construct($val) {
         $this->val = $val;
+    }
+
+    public function isText() {
+        return true;
     }
 }

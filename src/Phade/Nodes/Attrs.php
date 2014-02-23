@@ -5,23 +5,26 @@ namespace Phade\Nodes;
 
 class Attrs extends Node{
     private $attrs = [];
-    public function setAttribute($name, $val, $escaped = '')
-    {
-        $this->attrs[] = ['name' => $name, 'val' => $val, 'escaped' => $escaped];
+    public function setAttribute($name, $val, $escaped = '') {
+        $attr = new \stdClass();
+        $attr->name= $name;
+        $attr->val = $val;
+        $attr->escaped = $escaped;
+        $this->attrs[] = $attr;
         return $this;
     }
 
     public function getAttribute($name) {
         foreach($this->attrs as $attr) {
-            if ($name == $attr['name'])
-                return $attr['val'];
+            if ($name == $attr->name)
+                return $attr->val;
         }
     }
 
     public function removeAttribute($name)
     {
         foreach($this->attrs as $i => $attr)
-            if ($name == $attr['name'])
+            if ($name == $attr->name)
                 unset($this->attrs[$i]);
     }
 
@@ -33,4 +36,4 @@ class Attrs extends Node{
     {
         $this->attrs = $param;
     }
-} 
+}

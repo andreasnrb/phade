@@ -18,16 +18,14 @@ class Node {
     public $line;
     public $filename;
     public $debug;
-    private $isText;
     public $val;
     public $buffer;
     public $escape;
     protected $isBlock = false;
-    protected $isInline = false;
-
+    public $isInline = false;
     public function isText()
     {
-        return $this->isText;
+        return false;
     }
 
     public function getLine()
@@ -42,6 +40,6 @@ class Node {
 
     public function isInline()
     {
-        return $this->isInline;
+        return false;
     }
 }

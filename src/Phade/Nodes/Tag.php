@@ -3,7 +3,8 @@
 namespace Phade\Nodes;
 
 
-class Tag extends Attrs{
+class Tag extends Attrs
+{
 
     public $buffer;
     public $name;
@@ -37,10 +38,12 @@ class Tag extends Attrs{
         , 'sup'
     ];
 
-    function __construct($name, $block = null) {
+    function __construct($name, $block = null)
+    {
         $this->name = $name;
         $this->block = $block ? $block : new Block;
     }
+
     /**
      * @return bool
      */
@@ -57,7 +60,7 @@ class Tag extends Attrs{
          * @param Node $node
          * @return bool
          */
-        $isInline = function($node){
+        $isInline = function ($node) {
             // Recurse if the node is a block
             if ($node->isBlock())
                 /** @var Block $node */
@@ -71,15 +74,16 @@ class Tag extends Attrs{
         // Text-only or inline-only tag
         if (1 == sizeof($nodes)) return $isInline($nodes[0]);
 
-  // Multi-line inline-only tag
-  if (array_walk($this->block->getNodes(), $isInline)) {
-      for ($i = 1, $len = sizeof($nodes); $i < $len; ++$i) {
-          if ($nodes[$i-1]->isText() && $nodes[$i]->isText())
+        // Multi-line inline-only tag
+        if (array_walk($this->block->getNodes(), $isInline)) {
+            for ($i = 1, $len = sizeof($nodes); $i < $len; ++$i) {
+                if ($nodes[$i - 1]->isText() && $nodes[$i]->isText())
+                    return false;
+            }
+            return true;
+        }
+
+        // Mixed tag
         return false;
     }
-    return true;
-  }
-
-  // Mixed tag
-  return false;    }
 }

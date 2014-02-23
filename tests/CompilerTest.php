@@ -22,11 +22,11 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<!DOCTYPE html>', $this->jade->render('doctype html'));
         $this->assertEquals('<!DOCTYPE foo bar baz>', $this->jade->render('doctype foo bar baz'));
         $this->assertEquals('<!DOCTYPE html>', $this->jade->render('!!! 5'));
-        $this->assertEquals('<!DOCTYPE html>', $this->jade->render('!!!', ['doctype' => 'html']));
-        $this->assertEquals('<!DOCTYPE html>', $this->jade->render('!!! html', ['doctype' => 'xml']));
+        $this->assertEquals('<!DOCTYPE html>', $this->jade->render('!!!',[], ['doctype' => 'html']));
+        $this->assertEquals('<!DOCTYPE html>', $this->jade->render('!!! html',[], ['doctype' => 'xml']));
         $this->assertEquals('<html></html>', $this->jade->render('html'));
-        $this->assertEquals('<!DOCTYPE html><html></html>', $this->jade->render('html', ['doctype' => 'html']));
-        $this->assertEquals('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN>', $this->jade->render('doctype html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN'));
+        $this->assertEquals('<!DOCTYPE html><html></html>', $this->jade->render('html',[], ['doctype' => 'html']));
+        $this->assertEquals('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN>', $this->jade->render('doctype html PUBLIC \"-//W3C//DTD XHTML Basic 1.1//EN'));
     }
 
     /*
@@ -76,14 +76,14 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '<img>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str, "{doctype:'html' }"));
+        $this->assertEquals($html, $this->jade->render($str,[], ['doctype' => 'html']));
     }
 
     public function testSingleQuotes()
     {
-        $this->assertEquals("<p>'foo'</p>", $this->jade->render("p 'foo'"));
-        $this->assertEquals("<p>'foo'</p>", $this->jade->render("p\n  | 'foo'"));
-        $this->assertEquals('<a href="/foo"></a>', $this->jade->render("- var path = 'foo';\na(href='/' + path)"));
+       $this->assertEquals("<p>'foo'</p>", $this->jade->render("p 'foo'"));
+       $this->assertEquals("<p>'foo'</p>", $this->jade->render("p\n  | 'foo'"));
+       $this->assertEquals('<a href="/foo"></a>', $this->jade->render("- var path = 'foo';\na(href='/' + path)"));
     }
 
     public function testBlockExpansion()
@@ -101,7 +101,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             'img'
         ]);
 
-        $html = join("\n", [
+        $html = join('', [
             '<p></p>',
             '<div></div>',
             '<img/>'
@@ -126,7 +126,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<div class="a_b2"></div>', $this->jade->render('div.a_b2'));
         $this->assertEquals('<fb:user></fb:user>', $this->jade->render('fb:user'));
         $this->assertEquals('<fb:user:role></fb:user:role>', $this->jade->render('fb:user:role'));
-        $this->assertEquals('<colgroup><col class="test"/></colgroup>', $this->jade->render('colgroup\n  col.test'));
+        $this->assertEquals('<colgroup><col class="test"/></colgroup>', $this->jade->render("colgroup\n  col.test", [], ['prettyprint' => false]));/**/
     }
 
     public function testNestedTags()
@@ -151,7 +151,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '</ul>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
 
         $str = join("\n", [
             'a(href="#")',
@@ -160,7 +160,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '  | baz'
         ]);
 
-        $this->assertEquals('<a href="#">foo \nbar \nbaz</a>', $this->jade->render($str));
+        $this->assertEquals("<a href=\"#\">foo \nbar \nbaz</a>", $this->jade->render($str, [], ['prettyprint' => false]));
 
         $str = join("\n", [
             'ul',
@@ -178,7 +178,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '</ul>',
             '</ul>'
         ]);
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
     }
 
     public function testVariableLengthNewlines()
@@ -207,24 +207,24 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '</ul>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
     }
 
     public function testTabConversion()
     {
         $str = join("\n", [
             'ul',
-            '\tli a',
-            '\t',
-            '\tli b',
-            '\t\t',
-            '\t\t\t\t\t\t',
-            '\tli',
-            '\t\tul',
-            '\t\t\tli c',
+            "\tli a",
+            "\t",
+            "\tli b",
+            "\t\t",
+            "\t\t\t\t\t\t",
+            "\tli",
+            "\t\tul",
+            "\t\t\tli c",
             '',
-            '\t\t\tli d',
-            '\tli e',
+            "\t\t\tli d",
+            "\tli e",
         ]);
 
         $html = join("", [
@@ -236,7 +236,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '</ul>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
     }
 
     public function testNewlines()
@@ -269,7 +269,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '</ul>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
 
         $str = join("\n", [
             'html',
@@ -291,9 +291,9 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '</html>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
-        $this->assertEquals('<foo></foo>something<bar></bar>', $this->jade->render('foo\n= "something"\nbar'));
-        $this->assertEquals('<foo></foo>something<bar></bar>else', $this->jade->render('foo\n= "something"\nbar\n= "else"'));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
+        $this->assertEquals('<foo></foo>something<bar></bar>', $this->jade->render("foo\n= \"something\"\nbar", [], ['prettyprint' => false]));
+        $this->assertEquals('<foo></foo>something<bar></bar>else', $this->jade->render("foo\n= \"something\"\nbar\n= \"else\"", [], ['prettyprint' => false]));
     }
 
     public function testText()
@@ -938,4 +938,3 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             , $this->jade->render($str, "{ filename: " . __DIR__ . DIRECTORY_SEPARATOR . 'jade.test.js' . "}"));
     }
 }
- 

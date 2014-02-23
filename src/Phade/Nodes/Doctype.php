@@ -10,5 +10,7 @@ namespace Phade\Nodes;
 
 
 class Doctype extends Node{
-
+    public function __construct($value) {
+        $this->val = $value;
+    }
 } 
