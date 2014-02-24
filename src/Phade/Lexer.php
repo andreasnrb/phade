@@ -509,6 +509,7 @@ class Lexer
         if ($this->input[0] === '(') {
             $index = $this->bracketExpression()->end;
             $str = mb_substr($this->input, 1, $index - 1);
+            $str = preg_replace('/(\s*=\s*)/', '=', $str);
             $equals = '=';
             $this->assertNestingCorrect($str);
             $this->consume($index + 1);

@@ -39,8 +39,8 @@ function phade_attrs($obj, $escaped){
           $attr = $obj[$i];
         $key = $attr['name'];
         $val = $attr['val'];
-      if (is_bool($val) || null == $val || $val == 'true' || $val == 'false') {
-              if ($val == 'true' || ($val && $val != 'false')) {
+      if (is_bool($val) || null == $val || $val == 'true' || in_array($val, ['false','null','undefined'])) {
+              if ($val == 'true' || ($val && !in_array($val, ['false','null','undefined']))) {
                   $terse
                       ? array_push($buf, $key)
                       : array_push($buf, $key . '=\"'.$key.'\"');

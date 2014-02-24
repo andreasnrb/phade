@@ -683,7 +683,7 @@ class Compiler {
         }
 
         if (sizeof($classes)) {
-            $attr = new \stdClass();
+            $attr = [];
             $attr['name'] = 'class';
             $attr['val'] = join($classes,' ');
             array_push($buf, $attr);
