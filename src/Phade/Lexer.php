@@ -655,7 +655,7 @@ class Lexer
                 $range = (new CharacterParser())->parseMax($expr);
                 if ($expr[$range->end] !== '}') return mb_substr($_, 0, 2) . $this->interpolate(mb_substr($_, 2), $quote);
                 self::assertExpression($range->src);
-                return $quote . " , (" . $range->src . ") , " . $quote . $this->interpolate(mb_substr($expr, $range->end + 1), $quote);
+                return "$" . $range->src .$quote . $this->interpolate(mb_substr($expr, $range->end + 1), $quote);
             } catch (\Exception $ex) {
                 return mb_substr($_, 0, 2) . $this->interpolate(mb_substr($_, 2), $quote);
             }

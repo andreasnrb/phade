@@ -448,36 +448,36 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals('<body class="foo bar baz"></body>', $this->jade->render('body(class=["foo", "bar", "baz"])'));
     }
-/*
+
     public function testAttrInterpolation()
     {
         // Test single quote interpolation
         $this->assertEquals('<a href="/user/12">tj</a>'
-            , $this->jade->render('a(href='/user/#{id}") #{name}", "{ name: 'tj", id: 12 }"));
+            , $this->jade->render("a(href='/user/#{id}') #{name}", ['name' => 'tj', 'id' => 12]));
 
         $this->assertEquals('<a href="/user/12-tj">tj</a>'
-            , $this->jade->render('a(href='/user/#{id}-#{name}") #{name}", "{ name: 'tj", id: 12 }"));
+            , $this->jade->render("a(href='/user/#{id}-#{name}') #{name}", ['name' => 'tj', 'id' => 12]));
 
         $this->assertEquals('<a href="/user/&lt;script&gt;">tj</a>'
-            , $this->jade->render('a(href='/user/#{id}") #{name}", "{ name: 'tj", id: '<script>' }"));
+            , $this->jade->render("a(href='/user/#{id}') #{name}", ['name' => 'tj', 'id' => '<script>']));
 
         // Test double quote interpolation
         $this->assertEquals('<a href="/user/13">ds</a>'
-            , $this->jade->render('a(href="/user/#{id}") #{name}", "{ name: 'ds", id: 13 }"));
+            , $this->jade->render('a(href="/user/#{id}") #{name}', ['name' => 'ds', 'id' => 13]));
 
         $this->assertEquals('<a href="/user/13-ds">ds</a>'
-            , $this->jade->render('a(href="/user/#{id}-#{name}") #{name}", "{ name: 'ds", id: 13 }"));
+            , $this->jade->render('a(href="/user/#{id}-#{name}") #{name}', ['name' => 'ds', 'id' => 13]));
 
         $this->assertEquals('<a href="/user/&lt;script&gt;">ds</a>'
-            , $this->jade->render('a(href="/user/#{id}") #{name}", "{ name: 'ds", id: '<script>' }"));
+            , $this->jade->render('a(href="/user/#{id}") #{name}', ['name' => 'ds', 'id' => '<script>']));
 
         // Test escaping the interpolation
         $this->assertEquals('<a href="/user/#{id}">#{name}</a>'
-            , $this->jade->render('a(href="/user/\\#{id}") \\#{name}", "{}"));
+            , $this->jade->render('a(href="/user/\\#{id}") \\#{name}',[]));
         $this->assertEquals('<a href="/user/#{id}">ds</a>'
-            , $this->jade->render('a(href="/user/\\#{id}") #{name}", "{name: 'ds'}"));
+            , $this->jade->render('a(href="/user/\\#{id}") #{name}',  ['name' => 'ds']));
     }
-
+/*
     public function testAttrParens()
     {
         $this->assertEquals('<p foo="bar">baz</p>", $this->jade->render('p(foo=((('bar"))))= ((('baz")))"));
