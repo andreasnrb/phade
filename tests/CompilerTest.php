@@ -367,15 +367,15 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<!DOCTYPE html><input type="checkbox" checked>', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked=true)", [], ['prettyprint' => false]));
         $this->assertEquals('<!DOCTYPE html><input type="checkbox">', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked= false)", [], ['prettyprint' => false]));
     }
-/*
+
     public function testMultiLineAttrs()
     {
-        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>", $this->jade->render('a(foo="bar"\n  bar="baz"\n  checked) foo"));
-        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>", $this->jade->render('a(foo="bar"\nbar="baz"\nchecked) foo"));
-        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>", $this->jade->render('a(foo="bar"\n,bar="baz"\n,checked) foo"));
-        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>", $this->jade->render('a(foo="bar",\nbar="baz",\nchecked) foo"));
+        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>', $this->jade->render("a(foo=\"bar\"\n  bar=\"baz\"\n  checked) foo", [], ['prettyprint' => false]));
+        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>', $this->jade->render("a(foo=\"bar\"\nbar=\"baz\"\nchecked) foo", [], ['prettyprint' => false]));
+        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>', $this->jade->render("a(foo=\"bar\"\n,bar=\"baz\"\n,checked) foo", [], ['prettyprint' => false]));
+        $this->assertEquals('<a foo="bar" bar="baz" checked="checked">foo</a>', $this->jade->render("a(foo=\"bar\",\nbar=\"baz\",\nchecked) foo", [], ['prettyprint' => false]));
     }
-
+/*
     public function testAttrs()
     {
         $this->assertEquals('<img src="&lt;script&gt;"/>", $this->jade->render('img(src="<script>")"), 'Test attr escaping");

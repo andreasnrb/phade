@@ -667,16 +667,16 @@ class Compiler {
         $buf = [];
         $classes = [];
         $escaped = [];
-        $constant = array_walk($attrs, function($attr){ return $this->isConstant($attr->val);});
+        $constant = array_walk($attrs, function($attr){ return $this->isConstant($attr['val']);});
         $inherits = false;
 
         if ($this->terse) array_push($buf, ['terse' => 'true']);
 
         foreach($attrs as $attr) {
-            if ($attr->name == 'attributes') return $inherits = true;
-            $escaped[$attr->name] = $attr->escaped;
-            if ($attr->name == 'class') {
-                array_push($classes, $attr->val);
+            if ($attr['name'] == 'attributes') return $inherits = true;
+            $escaped[$attr['name']] = $attr['escaped'];
+            if ($attr['name'] == 'class') {
+                array_push($classes, $attr['val']);
             } else {
                 array_push($buf, $attr);
             }
@@ -684,8 +684,8 @@ class Compiler {
 
         if (sizeof($classes)) {
             $attr = new \stdClass();
-            $attr->name = 'class';
-            $attr->val = join($classes,' ');
+            $attr['name'] = 'class';
+            $attr['val'] = join($classes,' ');
             array_push($buf, $attr);
         }
 

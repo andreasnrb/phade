@@ -544,8 +544,7 @@ class Lexer
                 } else if ($loc === 'value' && !$state->isNesting()) {
                     try {
                         $this->assertExpression($val);
-                        //TODO: Something wrong here so cant support spaces as attribute separators
-                        /*if ($str[$i] === ' ' || $str[$i] === "\n" || $str[$i] === "\r\n") {
+                        if ($str[$i] === ' ' || $str[$i] === "\n" || $str[$i] === "\r\n") {
                             for ($x = $i; $x < mb_strlen($str); $x++) {
                                 if ($str[$x] != ' ' && $str[$x] != "\n" && $str[$x] != "\r\n") {
                                     if (CharacterParser::isPunctuator($str[$x]) && $str[$x] != '"' && $str[$x] != "'")
@@ -554,7 +553,7 @@ class Lexer
                                         return true;
                                 }
                             }
-                        }*/
+                        }
                         return $str[$i] === ',';
                     } catch (\Exception $ex) {
                         return false;
