@@ -360,12 +360,12 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("<p>Users: 0</p>", $this->jade->render("p Users: #{0}"));
         $this->assertEquals("<p>Users: false</p>", $this->jade->render("p Users: #{false}"));
     }
-/*
+
     public function  testHtml5Mode()
     {
-        $this->assertEquals('<!DOCTYPE html><input type="checkbox" checked>', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked)"));
-        $this->assertEquals('<!DOCTYPE html><input type="checkbox" checked>', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked=true)"));
-        $this->assertEquals('<!DOCTYPE html><input type="checkbox">", $this->jade->render('!!! 5\ninput(type="checkbox", checked= false)'));
+        $this->assertEquals('<!DOCTYPE html><input type="checkbox" checked>', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked)", [], ['prettyprint' => false]));
+        $this->assertEquals('<!DOCTYPE html><input type="checkbox" checked>', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked=true)", [], ['prettyprint' => false]));
+        $this->assertEquals('<!DOCTYPE html><input type="checkbox">', $this->jade->render("!!! 5\ninput(type=\"checkbox\", checked= false)", [], ['prettyprint' => false]));
     }
 /*
     public function testMultiLineAttrs()

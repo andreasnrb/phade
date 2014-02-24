@@ -23,8 +23,11 @@ function phade_merge($a, $b) {
 
 function phade_attrs($obj, $escaped){
     $buf = [];
-    $terse = false;
-    //delete $obj->terse;
+    $terse = isset($obj[0]['terse']) ? $obj[0]['terse']: false;
+    if ($terse) {
+       unset($obj[0]);
+        $obj = array_values($obj);
+    }
     echo "phade_attrs:\n";
     var_dump($obj);
     $keys = array_keys($obj);
@@ -36,8 +39,8 @@ function phade_attrs($obj, $escaped){
           $attr = $obj[$i];
         $key = $attr->name;
         $val = $attr->val;
-      if (is_bool($val) || null == $val) {
-              if ($val) {
+      if (is_bool($val) || null == $val || $val == 'true' || $val == 'false') {
+              if ($val == 'true' || ($val && $val != 'false')) {
                   $terse
                       ? array_push($buf, $key)
                       : array_push($buf, $key . '=\"\"');
