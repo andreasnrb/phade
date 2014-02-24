@@ -73,7 +73,7 @@ class Compiler {
      * @param null $options
      */
     public function __construct($node, $filename = '', $options = null) {
-        echo __METHOD__, "\n";
+
         if (is_null($options))
             $options = new \stdClass();
         $this->filename = $filename;
@@ -216,7 +216,7 @@ class Compiler {
      * @param Node $node
      */
     public function visit($node){
-        echo __METHOD__,"\n";
+
         $debug = $this->debug;
         if (is_array($node))
             $node = array_shift($node);
@@ -249,7 +249,6 @@ class Compiler {
 
     public function visitNode($node){
         $name = basename(get_class($node));
-        echo __METHOD__ . " $name\n";
         return $this->{'visit' . $name}($node);
     }
 
@@ -646,7 +645,7 @@ class Compiler {
      * @api public
      */
     public function visitAttributes($attrs) {
-        echo __METHOD__,"\n";
+
         if (!$attrs)
             return;
         $val = $this->attrs($attrs);
@@ -678,6 +677,14 @@ class Compiler {
             if ($attr['name'] == 'class') {
                 array_push($classes, $attr['val']);
             } else {
+                if (preg_match('/(\[.*\])(\[\d+\])/', $attr['val'])) {
+                    $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'array') . ') ."';
+                    $escaped[$attr['name']] = false;
+                } elseif(preg_match('/(\{(.*)\})(\[.+\])/', $attr['val'])) {
+                    $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'keyvaluearray') . ') ."';
+                    $escaped[$attr['name']] = false;
+
+                }
                 array_push($buf, $attr);
             }
         }
@@ -730,7 +737,7 @@ class Compiler {
         throw new PhadeException(sprintf('Not a constant %s',  $string));
     }
 
-    private function convertJStoPHP($src) {
+    private function convertJStoPHP($src, $type ='') {
         $isVar = $newVar = true;
         $phpSrc='';
         var_dump($src);
@@ -754,7 +761,6 @@ class Compiler {
             }
             $phpSrc .= $src[$i];
         }
-
         if (strpos($phpSrc,'||') !== false) {
             $array = explode('||', $phpSrc);
             array_walk($array, function(&$value, $key) { $value = trim($value); });
@@ -764,8 +770,25 @@ class Compiler {
                 return array_pop($array);
             }
             $phpSrc =  $array[0] .'?'. $array[0] .':'.$array[1];
-        } else
+        } else {
+            if ($type == 'array')
+                return $src;
+            elseif ($type == 'keyvaluearray') {
+                $temp = array();
+                $strtuples = explode(', ', $src);
+                for($i = 0; $i < sizeof($strtuples);$i++) {
+                    $tuples = explode(':', $strtuples[$i]);
+                    if ($i==0)
+                        $tuples[0] = "{'" . trim(substr($tuples[0],1)) . "'";
+                    else
+                        $tuples[0] = "'".trim($tuples[0])."'";
+                    $temp[] = implode(' => ', $tuples);
+                }
+                $src = implode(',', $temp);
+                return str_replace('}',']',str_replace('{','[', $src));
+            }
             return $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
+        }
         return $phpSrc;
     }
 } 

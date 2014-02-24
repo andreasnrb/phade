@@ -41,6 +41,9 @@ function phade_attrs($obj, $escaped){
         $val = $attr['val'];
       if (is_bool($val) || null == $val || $val == 'true' || in_array($val, ['false','null','undefined'])) {
               if ($val == 'true' || ($val && !in_array($val, ['false','null','undefined']))) {
+                  if (substr($key,0,5) == 'data-')
+                      array_push($buf, $key . '=\"'.$val.'\"');
+                  else
                   $terse
                       ? array_push($buf, $key)
                       : array_push($buf, $key . '=\"'.$key.'\"');

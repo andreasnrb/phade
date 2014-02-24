@@ -78,7 +78,7 @@ class Parser
      */
     public function parse()
     {
-        echo __METHOD__, "\n";
+
         $block = new Block();
         $block->setLine($this->line());
         while ('eos' !== $this->peek()->getType()) {
@@ -119,7 +119,7 @@ class Parser
      */
     public function advance()
     {
-        echo __METHOD__, "\n";
+
         $token = $this->lexer->advance();
         return $token;
     }
@@ -137,7 +137,7 @@ class Parser
      */
     public function peek()
     {
-        echo __METHOD__, "\n";
+
         $token = $this->lookahead(1);
         return $token;
     }
@@ -191,7 +191,7 @@ class Parser
      */
     private function parseExpr()
     {
-        echo __METHOD__, "\n";
+
 
         switch ($this->peek()->getType()) {
             case 'tag':
@@ -250,7 +250,7 @@ class Parser
 
     private function parseText()
     {
-        echo __METHOD__,"\n";
+
         $tok = $this->expect('text');
         $node = new Text($tok->val);
         $node->line = $this->line();
@@ -674,7 +674,7 @@ class Parser
      */
     private function tag($tag)
     {
-        echo __METHOD__, "\n";
+
 
         $dot = true;
         $tag->line = $this->line();
@@ -696,13 +696,9 @@ class Parser
                     $seenAttrs = true;
                     $tok = $this->advance();
                     $obj = $tok->attrs;
-                    $escaped = $tok->escaped;
-                    $names = array_keys($obj);
-
                     if ($tok->selfClosing) $tag->selfClosing = true;
-                    foreach($names as $name) {
-                        $val = $obj[$name];
-                        $tag->setAttribute($name, $val, $escaped[$name]);
+                    foreach($obj as $attr) {
+                        $tag->setAttribute($attr['name'], $attr['val'], $attr['escaped']);
                     }
                     continue;
                 default:

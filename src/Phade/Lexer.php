@@ -45,7 +45,7 @@ class Lexer
     private function consume($len)
     {
         $this->input = mb_substr($this->input, $len);
-        echo __METHOD__, "\n";
+
     }
 
     /**
@@ -58,7 +58,7 @@ class Lexer
 
     private function scan($regexp, $type)
     {
-        echo __METHOD__, "\n";
+
         if (preg_match($regexp, $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $token = $this->token($type, isset($captures[1]) && mb_strlen($captures[1]) > 0 ? $captures[1] : '');
@@ -77,7 +77,6 @@ class Lexer
      */
     public function lookahead($n = 1)
     {
-        echo __METHOD__, $n, "\n";
         $fetch = $n - sizeof($this->stash);
         while ($fetch-- > 0) $this->stash[] = $this->next();
         return $this->stash[--$n];
@@ -109,7 +108,7 @@ class Lexer
 
     private function stashed()
     {
-        echo __METHOD__, "\n";
+
         $stashed = sizeof($this->stash) ? array_shift($this->stash) : null;
         return $stashed;
     }
@@ -129,7 +128,7 @@ class Lexer
 
     private function eos()
     {
-        echo __METHOD__, "\n";
+
         if (mb_strlen($this->input)) return null;
         if (sizeof($this->indentStack)) {
             array_shift($this->indentStack);
@@ -145,7 +144,7 @@ class Lexer
 
     private function blank()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^\n *\n/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]) - 1); // do not consume the last \r
             $this->lineno++;
@@ -160,7 +159,7 @@ class Lexer
      */
     private function comment()
     {
-        echo __METHOD__, "\n";
+
 
         if (preg_match('/^ *\/\/(-)?([^\n]*)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
@@ -173,7 +172,7 @@ class Lexer
 
     private function interpolation()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^#\{/', $this->input)) {
             $match = $this->bracketExpression(1);
             $this->consume($match->end + 1);
@@ -184,7 +183,7 @@ class Lexer
 
     private function tag()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^(\w[-:\w]*)(\/?)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $name = $captures[1];
@@ -232,7 +231,7 @@ class Lexer
      */
     private function text()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^([^\.\<][^\n]+)/', $this->input)
             && !preg_match('/^(?:\| ?| )([^\n]+)/', $this->input)
         ) {
@@ -271,7 +270,7 @@ class Lexer
      */
     private function prepend()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^prepend +([^\n]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $token = $this->token('block', $captures[1]);
@@ -285,7 +284,7 @@ class Lexer
      */
     private function append()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^append +([^\n]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $token = $this->token('block', $captures[1]);
@@ -299,7 +298,7 @@ class Lexer
      */
     private function block()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match("/^block\b *(?:(prepend|append) +)?([^\n]+)/", $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $token = $this->token('block', $captures[2]);
@@ -313,7 +312,7 @@ class Lexer
      */
     private function mixinBlock()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^block\s*\n/', $this->input, $matches)) {
             $this->consume(mb_strlen($matches[0]) - 1);
             return $this->token('mixin-block');
@@ -325,7 +324,7 @@ class Lexer
      */
     private function _yield()
     {
-        echo __METHOD__, "\n";
+
         return $this->scan('/^yield */', 'yield');
     }
 
@@ -334,7 +333,7 @@ class Lexer
      */
     private function _include()
     {
-        echo __METHOD__, "\n";
+
         return $this->scan('/^include +([^\n]+)/', 'include');
     }
 
@@ -343,7 +342,7 @@ class Lexer
      */
     private function _case()
     {
-        echo __METHOD__, "\n";
+
         return $this->scan('/^case +([^\n]+)/', 'case');
     }
 
@@ -352,7 +351,7 @@ class Lexer
      */
     private function when()
     {
-        echo __METHOD__, "\n";
+
         return $this->scan('/^when +([^:\n]+)/', 'when');
     }
 
@@ -361,7 +360,7 @@ class Lexer
      */
     private function _default()
     {
-        echo __METHOD__, "\n";
+
         return $this->scan('/^default */', 'default');
     }
 
@@ -370,7 +369,7 @@ class Lexer
      */
     private function assignment()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^([\w_]+) += *([^\n]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $name = $captures[1];
@@ -385,7 +384,7 @@ class Lexer
 
     private function call()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^\+([-\w]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $tok = $this->token('call', $captures[1]);
@@ -405,7 +404,7 @@ class Lexer
 
     private function mixin()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^mixin +([-\w]+)(?: *\((.*)\))? */', $this->input, $captures)) {
             $this->consume($captures[0]);
             $token = $this->token('mixin', $captures[1]);
@@ -420,7 +419,7 @@ class Lexer
 
     private function conditional()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^(if|unless|else if|else)\b([^\n]*)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $type = $captures[1];
@@ -456,7 +455,7 @@ class Lexer
      */
     private function _while()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^while +([^\n]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $this->assertExpression($captures[1]);
@@ -471,7 +470,7 @@ class Lexer
      */
     private function _each()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^(?:- *)?(?:each|for) +([a-zA-Z_$][\w$]*)(?: *, *([a-zA-Z_$][\w$]*))? * in *([^\n]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $token = $this->token('each', $captures[1]);
@@ -487,7 +486,7 @@ class Lexer
      */
     private function code()
     {
-        echo __METHOD__, "\n";
+
         if (preg_match('/^(!?=|-)[ \t]*([^\n]+)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $flags = $captures[1];
@@ -505,11 +504,11 @@ class Lexer
      */
     protected function attrs()
     {
-        echo __METHOD__, "\n";
+
         if ($this->input[0] === '(') {
             $index = $this->bracketExpression()->end;
             $str = mb_substr($this->input, 1, $index - 1);
-            $str = preg_replace('/(\s*=\s*)/', '=', $str);
+            //$str = preg_replace('/(\s*=\s*)/', '=', $str);
             $equals = '=';
             $this->assertNestingCorrect($str);
             $this->consume($index + 1);
@@ -527,25 +526,28 @@ class Lexer
             $characterParser = new CharacterParser();
             $state = $characterParser->defaultState();
 
-            $isEndOfAttribute = function ($i) use (&$key, &$str, &$loc, &$state, &$val) {
+            $isEndOfAttribute = function ($i) use (&$key, &$str, &$loc, &$state, &$val, &$quote) {
+                echo "key: $key\n";
                 if (trim($key) === '') return false;
-                if (($i) === mb_strlen($str)) {
-                    return true;
-                }
-                if ('key' === $loc) {
-                    if ($str[$i] === ' ' || $str[$i] === "\n" || $str[$i] === "\r\n") {
+                if (($i) === mb_strlen($str)) return true;
+                if ('key' == $loc) {
+                    if ($str[$i] == ' ' || $str[$i] == "\n" || $str[$i] == "\r\n") {
                         for ($x = $i; $x < mb_strlen($str); $x++) {
-                            if ($str[$x] !== ' ' && $str[$x] !== "\n" && $str[$x] !== "\r\n") {
-                                if ($str[$x] === '=' || $str[$x] === '!' || $str[$x] === ',') return false;
+                            if ($str[$x] != ' ' && $str[$x] != "\n" && $str[$x] != "\r\n") {
+                                if ($str[$x] == '=' || $str[$x] == '!' || $str[$x] == ',') return false;
                                 else return true;
                             }
                         }
                     }
                     return $str[$i] === ',';
-                } else if ($loc === 'value' && !$state->isNesting()) {
+                } else if ($loc == 'value' && !$state->isNesting()) {
+                    echo "val:$val.\n";
+                    echo "str i:{$str[$i]}.\n";
+                    if ($quote == '' && $str[$i] == ' ')
+                        return false;
                     try {
                         $this->assertExpression($val);
-                        if ($str[$i] === ' ' || $str[$i] === "\n" || $str[$i] === "\r\n") {
+                        if ($str[$i] == ' ' || $str[$i] == "\n" || $str[$i] == "\r\n") {
                             for ($x = $i; $x < mb_strlen($str); $x++) {
                                 if ($str[$x] != ' ' && $str[$x] != "\n" && $str[$x] != "\r\n") {
                                     if (CharacterParser::isPunctuator($str[$x]) && $str[$x] != '"' && $str[$x] != "'")
@@ -553,6 +555,7 @@ class Lexer
                                     else
                                         return true;
                                 }
+                                return false;
                             }
                         }
                         return $str[$i] === ',';
@@ -560,20 +563,24 @@ class Lexer
                         return false;
                     }
                 }
-                return false;
             };
+
+            $this->lineno += sizeof(mb_split("\n", $str)) - 1;
 
             for ($i = 0; $i <= mb_strlen($str); $i++) {
                 if ($isEndOfAttribute($i)) {
+                    echo "end of attribute\n";
                     $val = trim($val);
-                    $val = trim($val,'"\'');
+                    if (isset($val[0]) && $val[0] == '"')
+                        $val = trim($val,'"');
+                    elseif (isset($val[0]) && $val[0] == '\'')
+                        $val = trim($val,'\'');
                     if ($val) $this->assertExpression($val);
                     $key = trim($key);
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-                    $token->escaped[$key] = $escapedAttr;
-                    if (strpos($val, ' , \'') !== false)
-                        $val = substr($val, 0, strpos($val, ' , \''));
-                    $token->attrs[$key] = '' == $val ? true : $val;
+                   /* if (strpos($val, ' , \'') !== false)
+                        $val = substr($val, 0, strpos($val, ' , \''));*/
+                    $token->attrs[] = ['name' => $key,'val' => '' == $val ? true : $val, 'escaped' => $escapedAttr];
                     $key = $val = '';
                     $loc = 'key';
                     $escapedAttr = false;
@@ -582,28 +589,32 @@ class Lexer
                         case 'key-char':
                             if ($str[$i] === $quote) {
                                 $loc = 'key';
-                                if ($i + 1 < mb_strlen($str) && !in_array($str[$i + 1], [' ', ',', '!', $equals, "\n", "\r\n"]))
+                                if ($i + 1 < mb_strlen($str) && !in_array($str[$i + 1], [' ', ',', '!', '=', "\n", "\r\n"]))
                                     throw new \Exception('Unexpected character ' . $str[$i + 1] . ' expected ` `, `\\n`, `,`, `!` or `=`');
                             } else if ($loc === 'key-char') {
                                 $key .= $str[$i];
                             }
                             break;
                         case 'key':
-                            if (empty($key) && ($str[$i] === '"' || $str[$i] === "'")) {
+                            //echo "switch key:$key, str $str[$i],\n";
+                            if ($key == '' && (isset($str[$i]) && ($str[$i] === '"' || $str[$i] === "'"))) {
                                 $loc = 'key-char';
                                 $quote = $str[$i];
-                            } else if ($str[$i] === '!' || $str[$i] === $equals) {
+                            } else if (isset($str[$i]) && ($str[$i] === '!' || $str[$i] === '=')) {
                                 $escapedAttr = $str[$i] !== '!';
                                 if ($str[$i] === '!') $i++;
-                                if ($str[$i] !== $equals) throw new \Exception('Unexpected character ' . $str[$i] . ' expected `=`');
+                                if ($str[$i] !== '=')
+                                    throw new \Exception('Unexpected character ' . $str[$i] . ' expected `=`');
                                 $loc = 'value';
+                                echo "loc: $loc\n";
                                 $state = $characterParser->defaultState();
-                            } else {
+                            } elseif (isset($str[$i])) {
                                 $key .= $str[$i];
                             }
 
                             break;
                         case 'value':
+                            echo "val:$val,\n";
                             $state = $characterParser->parseChar($str[$i], $state);
                             if ($state->isString()) {
                                 $loc = 'string';
@@ -634,7 +645,7 @@ class Lexer
 
     private function interpolate($attr, $quote)
     {
-        echo __METHOD__, "\n";
+
         return str_replace('\#{', '#{', preg_replace_callback('/(\\\\)?#{(.+)/', function ($_) use (&$quote) {
             $escape = $_[1];
             $expr = $_[2];
@@ -657,7 +668,7 @@ class Lexer
 
     private function indent()
     {
-        echo __METHOD__, "\n";
+
         // established regexp
         if ($this->indentRe) {
             preg_match($this->indentRe, $this->input, $captures);
@@ -709,7 +720,7 @@ class Lexer
 
     private function pipelessText()
     {
-        echo __METHOD__, "\n";
+
         if ($this->pipeless && "\n" != $this->input[0]) {
             $i = mb_strpos($this->input, "\n");
             if ($i === false) {
@@ -727,7 +738,7 @@ class Lexer
      */
     private function colon()
     {
-        echo __METHOD__, "\n";
+
 
         return $this->scan('/^: */', ':');
     }
@@ -737,7 +748,7 @@ class Lexer
      */
     private function fail()
     {
-        echo __METHOD__, "\n";
+
 
         throw new \Exception('unexpected text ' . mb_substr($this->input, 0, 6));
     }
@@ -750,7 +761,7 @@ class Lexer
      */
     public function advance()
     {
-        echo __METHOD__, "\n";
+
         $advance = $this->stashed() or $advance = $this->next();
         return $advance;
     }
@@ -766,7 +777,7 @@ class Lexer
         if (!isset($count))
             $count = 0;
         $count++;
-        echo __METHOD__, "\n";
+
 
         $next = $this->deferred()
         or $next = $this->blank()

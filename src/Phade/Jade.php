@@ -51,7 +51,7 @@ class Jade
 
     public function compile($str, $scope = [], $options = [])
     {
-        echo __METHOD__, "\n";
+
         $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => true];
         $options = array_merge($default, $options);
         if (is_array($options))
@@ -94,7 +94,7 @@ class Jade
      */
     private function parse($str, $options = [])
     {
-        echo __METHOD__, "\n";
+
         echo $str, "\n";
         if (is_array($options))
             $options = (object)$options;

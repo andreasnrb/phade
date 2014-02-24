@@ -27,7 +27,7 @@ class Block extends Node {
 
     public function push($node)
     {
-        echo __METHOD__,"\n";
+
         array_push($this->nodes, $node);
     }
 

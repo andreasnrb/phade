@@ -381,7 +381,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<img src="&lt;script&gt;"/>', $this->jade->render('img(src="<script>")'), 'Test attr escaping');
 
         $this->assertEquals('<a data-attr="bar"></a>', $this->jade->render('a(data-attr="bar")'));
-        $this->assertEquals('<a data-attr="bar" data-attr-2="baz"></a>', $this->jade->render('a(data-attr="bar", data-attr-2="baz")'));
+       $this->assertEquals('<a data-attr="bar" data-attr-2="baz"></a>', $this->jade->render('a(data-attr="bar", data-attr-2="baz")'));
 
         $this->assertEquals('<a title="foo,bar"></a>', $this->jade->render('a(title= "foo,bar")'));
         $this->assertEquals('<a title="foo,bar"></a>', $this->jade->render('a(title="foo,bar")'));
@@ -389,7 +389,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('<p class="foo"></p>', $this->jade->render("p(class='foo')"), 'Test single quoted attrs');
         $this->assertEquals('<input type="checkbox" checked="checked"/>', $this->jade->render('input( type="checkbox", checked )'));
-        $this->assertEquals('<input type="checkbox" checked="checked"/>', $this->jade->render('input( type="checkbox", checked = true )'));
+       $this->assertEquals('<input type="checkbox" checked="checked"/>', $this->jade->render('input( type="checkbox", checked = true )'));
         $this->assertEquals('<input type="checkbox"/>', $this->jade->render('input(type="checkbox", checked= false)'));
         $this->assertEquals('<input type="checkbox"/>', $this->jade->render('input(type="checkbox", checked= null)'));
         $this->assertEquals('<input type="checkbox"/>', $this->jade->render('input(type="checkbox", checked= undefined)'));
@@ -398,48 +398,50 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<img src="/foo.png"/>', $this->jade->render('img(src  =  "/foo.png")'), 'Test attr = whitespace');
         $this->assertEquals('<img src="/foo.png"/>', $this->jade->render('img(src="/foo.png")'), 'Test attr :');
         $this->assertEquals('<img src="/foo.png"/>', $this->jade->render('img(src  =  "/foo.png")'), 'Test attr : whitespace');
-    }
-/*
-        $this->assertEquals('<img src="/foo.png" alt="just some foo"/>", $this->jade->render('img(src="/foo.png", alt="just some foo")'));
-        $this->assertEquals('<img src="/foo.png" alt="just some foo"/>", $this->jade->render('img(src = "/foo.png", alt = "just some foo")'));
 
-        $this->assertEquals('<p class="foo,bar,baz"></p>", $this->jade->render('p(class="foo,bar,baz")'));
-        $this->assertEquals('<a href="http://google.com" title="Some : weird = title"></a>", $this->jade->render('a(href= "http://google.com", title= "Some : weird = title")'));
-        $this->assertEquals('<label for="name"></label>", $this->jade->render('label(for="name")'));
-        $this->assertEquals('<meta name="viewport" content="width=device-width"/>", $this->jade->render('meta(name= 'viewport", content='width=device-width")'), 'Test attrs that contain attr separators');
-        $this->assertEquals('<div style="color= white"></div>", $this->jade->render('div(style='color= white')"));
-        $this->assertEquals('<div style="color: white"></div>", $this->jade->render('div(style='color: white')'));
-        $this->assertEquals('<p class="foo"></p>", $this->jade->render('p('class'='foo")'), 'Test keys with single quotes');
-        $this->assertEquals('<p class="foo"></p>", $this->jade->render('p(\"class\"= 'foo")'), 'Test keys with double quotes');
+        $this->assertEquals('<img src="/foo.png" alt="just some foo"/>', $this->jade->render('img(src="/foo.png", alt="just some foo")'));
+        $this->assertEquals('<img src="/foo.png" alt="just some foo"/>', $this->jade->render('img(src = "/foo.png", alt = "just some foo")'));
 
-        $this->assertEquals('<p data-lang="en"></p>", $this->jade->render('p(data-lang = "en")'));
-        $this->assertEquals('<p data-dynamic="true"></p>", $this->jade->render('p('data-dynamic"= "true")'));
-        $this->assertEquals('<p data-dynamic="true" class="name"></p>", $this->jade->render('p('class"= "name", "data-dynamic"= "true")'));
-        $this->assertEquals('<p data-dynamic="true"></p>", $this->jade->render('p(\'data-dynamic\'= "true")'));
-        $this->assertEquals('<p data-dynamic="true" class="name"></p>", $this->jade->render('p(\'class\'= "name", \'data-dynamic\'= "true")'));
-        $this->assertEquals('<p data-dynamic="true" yay="yay" class="name"></p>", $this->jade->render('p(\'class\'= "name", \'data-dynamic\'= "true", yay)"));
+        $this->assertEquals('<p class="foo,bar,baz"></p>', $this->jade->render('p(class="foo,bar,baz")'));
+        $this->assertEquals('<a href="http://google.com" title="Some : weird = title"></a>', $this->jade->render('a(href= "http://google.com", title= "Some : weird = title")'));
+        $this->assertEquals('<label for="name"></label>', $this->jade->render('label(for="name")'));
+        $this->assertEquals('<meta name="viewport" content="width=device-width"/>', $this->jade->render("meta(name= 'viewport', content='width=device-width')"), 'Test attrs that contain attr separators');
+        $this->assertEquals('<div style="color= white"></div>', $this->jade->render("div(style='color= white')"));
+        $this->assertEquals('<div style="color: white"></div>', $this->jade->render("div(style='color: white')"));
+        $this->assertEquals('<p class="foo"></p>', $this->jade->render("p('class'='foo')"), 'Test keys with single quotes');
+        $this->assertEquals('<p class="foo"></p>', $this->jade->render("p(\"class\"= 'foo')"), 'Test keys with double quotes');
 
-        $this->assertEquals('<input checked="checked" type="checkbox"/>", $this->jade->render('input(checked, type="checkbox')'));
+        $this->assertEquals('<p data-lang="en"></p>', $this->jade->render('p(data-lang = "en")'));
 
-        $this->assertEquals('<a data-foo="{ foo: \'bar\", bar= \'baz\' }"></a>", $this->jade->render('a(data-foo  = "{ foo: \'bar\", bar= \'baz\' }")'));
+        $this->assertEquals('<p data-dynamic="true"></p>', $this->jade->render('p("data-dynamic"= "true")'));
+        $this->assertEquals('<p data-dynamic="true" class="name"></p>', $this->jade->render('p("class"= "name", "data-dynamic"= "true")'));
+        $this->assertEquals('<p data-dynamic="true"></p>', $this->jade->render('p(\'data-dynamic\'= "true")'));
+        $this->assertEquals('<p data-dynamic="true" class="name"></p>', $this->jade->render('p(\'class\'= "name", \'data-dynamic\'= "true")'));
+        $this->assertEquals('<p data-dynamic="true" yay="yay" class="name"></p>', $this->jade->render('p(\'class\'= "name", \'data-dynamic\'= "true", yay)'));
 
-        $this->assertEquals('<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>", $this->jade->render('meta(http-equiv="X-UA-Compatible", content="IE=edge,chrome=1")'));
+        $this->assertEquals('<input checked="checked" type="checkbox"/>', $this->jade->render('input(checked, type="checkbox")'));
 
-        $this->assertEquals('<div style="background: url(/' . 'images/test.png)">Foo</div>", $this->jade->render('div(style= 'background: url(/images/test.png)') Foo'));
-        $this->assertEquals('<div style="background = url(/' . 'images/test.png)">Foo</div>", $this->jade->render('div(style= 'background = url(/images/test.png)") Foo'));
-        $this->assertEquals('<div style="foo">Foo</div>", $this->jade->render("div(style= ['foo', 'bar'][0]) Foo"));
-        $this->assertEquals('<div style="bar">Foo</div>", $this->jade->render('div(style= { foo: 'bar", baz: 'raz' }['foo']) Foo'));
-        $this->assertEquals('<a href="def">Foo</a>", $this->jade->render('a(href='abcdefg'.substr(3,3)) Foo"));
-        $this->assertEquals('<a href="def">Foo</a>", $this->jade->render('a(href={test: 'abcdefg'}.test.substr(3,3)) Foo"));
-        $this->assertEquals('<a href="def">Foo</a>", $this->jade->render('a(href={test: 'abcdefg'}.test.substr(3,[0,3][1])) Foo"));
+        $this->assertEquals('<a data-foo="{ foo: \'bar\', bar= \'baz\' }"></a>', $this->jade->render('a(data-foo  = "{ foo: \'bar\', bar= \'baz\' }")'));
 
-        $this->assertEquals('<rss xmlns:atom="atom"></rss>", $this->jade->render('rss(xmlns:atom=\"atom\")"));
-        $this->assertEquals('<rss xmlns:atom="atom"></rss>", $this->jade->render('rss('xmlns:atom'=\"atom\")"));
-        $this->assertEquals('<rss xmlns:atom="atom"></rss>", $this->jade->render('rss(\"xmlns:atom\"='atom")"));
-        $this->assertEquals('<rss xmlns:atom="atom" foo="bar"></rss>", $this->jade->render('rss('xmlns:atom'=\"atom\", 'foo'= 'bar")"));
-        $this->assertEquals('<a data-obj="{ foo: \'bar\' }"></a>", $this->jade->render('a(data-obj= \"{ foo: 'bar' }\")"));
+        $this->assertEquals('<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>', $this->jade->render('meta(http-equiv="X-UA-Compatible", content="IE=edge,chrome=1")'));
 
-        $this->assertEquals('<meta content="what\'s up? \'weee\'"/>", $this->jade->render('meta(content="what\'s up? \'weee\'")"));
+        $this->assertEquals('<div style="background: url(/' . 'images/test.png)">Foo</div>', $this->jade->render("div(style= 'background: url(/images/test.png)') Foo"));
+        $this->assertEquals('<div style="background = url(/' . 'images/test.png)">Foo</div>', $this->jade->render("div(style= 'background = url(/images/test.png)') Foo"));
+        $this->assertEquals('<div style="foo">Foo</div>', $this->jade->render("div(style= ['foo', 'bar'][0]) Foo"));
+        $this->assertEquals('<div style="bar">Foo</div>', $this->jade->render("div(style= { foo: 'bar', baz: 'raz' }['foo']) Foo"));
+        //TODO: Add better support for js in attrubytes
+/*        $this->assertEquals('<a href="def">Foo</a>', $this->jade->render("a(href='abcdefg'.substr(3,3)) Foo"));
+        $this->assertEquals('<a href="def">Foo</a>', $this->jade->render("a(href={test: 'abcdefg'}.test.substr(3,3)) Foo"));
+        $this->assertEquals('<a href="def">Foo</a>', $this->jade->render("a(href={test: 'abcdefg'}.test.substr(3,[0,3][1])) Foo"));
+*/
+
+        $this->assertEquals('<rss xmlns:atom="atom"></rss>', $this->jade->render("rss(xmlns:atom=\"atom\")"));
+        $this->assertEquals('<rss xmlns:atom="atom"></rss>', $this->jade->render("rss('xmlns:atom'=\"atom\")"));
+        $this->assertEquals('<rss xmlns:atom="atom"></rss>', $this->jade->render("rss(\"xmlns:atom\"='atom')"));
+        $this->assertEquals('<rss xmlns:atom="atom" foo="bar"></rss>', $this->jade->render("rss('xmlns:atom'=\"atom\", 'foo'= 'bar')"));
+        $this->assertEquals('<a data-obj="{ foo: \'bar\' }"></a>', $this->jade->render("a(data-obj= \"{ foo: 'bar' }\")"));
+
+        $this->assertEquals('<meta content="what\'s up? \'weee\'"/>', $this->jade->render('meta(content="what\'s up? \'weee\'")'));
     }
 /*
     public function testColonsOption()
