@@ -443,17 +443,12 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('<meta content="what\'s up? \'weee\'"/>', $this->jade->render('meta(content="what\'s up? \'weee\'")'));
     }
-/*
-    public function testColonsOption()
-    {
-        $this->assertEquals('<a href="/bar"></a>", $this->jade->render('a(href:"/bar")", "{ colons: true }"));
-    }
 
     public function testClassAttrArray()
     {
-        $this->assertEquals('<body class="foo bar baz"></body>", $this->jade->render('body(class=["foo", "bar", "baz"])"));
+        $this->assertEquals('<body class="foo bar baz"></body>', $this->jade->render('body(class=["foo", "bar", "baz"])'));
     }
-
+/*
     public function testAttrInterpolation()
     {
         // Test single quote interpolation

@@ -675,6 +675,13 @@ class Compiler {
             if ($attr['name'] == 'attributes') return $inherits = true;
             $escaped[$attr['name']] = $attr['escaped'];
             if ($attr['name'] == 'class') {
+                if (preg_match('/(\[.*\])(\[\d+\])?/', $attr['val'])) {
+                    $attr['val'] = '" . (implode(\' \','.$this->convertJStoPHP($attr['val'], 'array') . ')) ."';
+                    $escaped[$attr['name']] = false;
+                } elseif(preg_match('/(\{(.*)\})(\[.+\])/', $attr['val'])) {
+                    $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'keyvaluearray') . ') ."';
+                    $escaped[$attr['name']] = false;
+                }
                 array_push($classes, $attr['val']);
             } else {
                 if (preg_match('/(\[.*\])(\[\d+\])/', $attr['val'])) {
