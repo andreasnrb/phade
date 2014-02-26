@@ -9,7 +9,7 @@
 namespace Phade\Nodes;
 
 
-class Each {
+class Each extends Node {
 
     public $alternative;
     public $line;

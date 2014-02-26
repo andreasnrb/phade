@@ -59,7 +59,6 @@ class JadeTest extends \PHPUnit_Framework_TestCase
 
     public function testCompile()
     {
-        echo __METHOD__,"\n";
         $fn = $this->jade->compile('p foo');
         $this->assertEquals('<p>foo</p>', $fn());
     }

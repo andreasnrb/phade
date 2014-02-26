@@ -527,7 +527,6 @@ class Lexer
             $state = $characterParser->defaultState();
 
             $isEndOfAttribute = function ($i) use (&$key, &$str, &$loc, &$state, &$val, &$quote) {
-                echo "key: $key\n";
                 if (trim($key) === '') return false;
                 if (($i) === mb_strlen($str)) return true;
                 if ('key' == $loc) {
@@ -541,8 +540,6 @@ class Lexer
                     }
                     return $str[$i] === ',';
                 } else if ($loc == 'value' && !$state->isNesting()) {
-                    echo "val:$val.\n";
-                    echo "str i:{$str[$i]}.\n";
                     if ($quote == '' && $str[$i] == ' ')
                         return false;
                     try {
@@ -569,7 +566,6 @@ class Lexer
 
             for ($i = 0; $i <= mb_strlen($str); $i++) {
                 if ($isEndOfAttribute($i)) {
-                    echo "end of attribute\n";
                     $val = trim($val);
                     if (isset($val[0]) && $val[0] == '"')
                         $val = trim($val,'"');
@@ -578,8 +574,6 @@ class Lexer
                     if ($val) $this->assertExpression($val);
                     $key = trim($key);
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-                   /* if (strpos($val, ' , \'') !== false)
-                        $val = substr($val, 0, strpos($val, ' , \''));*/
                     $token->attrs[] = ['name' => $key,'val' => '' == $val ? true : $val, 'escaped' => $escapedAttr];
                     $key = $val = '';
                     $loc = 'key';
@@ -596,7 +590,6 @@ class Lexer
                             }
                             break;
                         case 'key':
-                            //echo "switch key:$key, str $str[$i],\n";
                             if ($key == '' && (isset($str[$i]) && ($str[$i] === '"' || $str[$i] === "'"))) {
                                 $loc = 'key-char';
                                 $quote = $str[$i];
@@ -606,7 +599,6 @@ class Lexer
                                 if ($str[$i] !== '=')
                                     throw new \Exception('Unexpected character ' . $str[$i] . ' expected `=`');
                                 $loc = 'value';
-                                echo "loc: $loc\n";
                                 $state = $characterParser->defaultState();
                             } elseif (isset($str[$i])) {
                                 $key .= $str[$i];
@@ -614,7 +606,6 @@ class Lexer
 
                             break;
                         case 'value':
-                            echo "val:$val,\n";
                             $state = $characterParser->parseChar($str[$i], $state);
                             if ($state->isString()) {
                                 $loc = 'string';

@@ -14,7 +14,7 @@ class Attrs extends Node{
     public function getAttribute($name) {
         foreach($this->attrs as $attr) {
             if ($name == $attr['name'])
-                return $attr->val;
+                return $attr['val'];
         }
     }
 

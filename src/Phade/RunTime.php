@@ -1,9 +1,20 @@
 <?php
 
 function phade_merge($a, $b) {
+    if (!isset($a['class']) && !isset($b['class']))
+        return array_merge($a, $b);
+    if (!isset($a['class']))
+        $a['class'] = $a;
+    if (!isset($b['class']))
+        $b['class'] = $b;
     $ac = $a['class'];
-  $bc = $b['class'];
-
+    $bc = $b['class'];
+    if (!is_array($ac)) $ac = [$ac];
+    if (!is_array($bc)) $bc = [$bc];
+    $a['class'] = array_merge($ac, $bc);
+    $a['class'] = array_filter($a['class'], 'phade_nulls');
+    $a['class'] = array_values($a['class']);
+    return $a;
   if ($ac || $bc) {
       $ac = $ac || [];
       $bc = $bc || [];
@@ -21,15 +32,16 @@ function phade_merge($a, $b) {
   return $a;
 };
 
+function phade_nulls($val) {
+    return $val != '' && !in_array($val, [null, 'null', '', 'undefined']);
+}
 function phade_attrs($obj, $escaped){
     $buf = [];
-    var_dump($obj);
     $terse = isset($obj[0]['terse']) ? $obj[0]['terse']: false;
     if ($terse) {
        unset($obj[0]);
         $obj = array_values($obj);
     }
-    echo "phade_attrs:\n";
     $keys = array_keys($obj);
     $len = sizeof($keys);
 

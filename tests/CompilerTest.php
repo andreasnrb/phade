@@ -18,14 +18,14 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
     public function testDoctypes()
     {
-        $this->assertEquals("<?xml version=\"1.0\" encoding=\"utf-8\" ?>", $this->jade->render("!!! xml"));
+        $this->assertEquals("<?xml version=\"1.0\" encoding=\"utf-8\" ?>", $this->jade->render("!!! xml", [], ['prettyprint' => false]));
         $this->assertEquals("<!DOCTYPE html>", $this->jade->render("doctype html"));
         $this->assertEquals("<!DOCTYPE foo bar baz>", $this->jade->render("doctype foo bar baz"));
         $this->assertEquals("<!DOCTYPE html>", $this->jade->render("!!! 5"));
         $this->assertEquals("<!DOCTYPE html>", $this->jade->render("!!!",[], ['doctype' => 'html']));
         $this->assertEquals("<!DOCTYPE html>", $this->jade->render("!!! html",[], ['doctype' => 'xml']));
         $this->assertEquals("<html></html>", $this->jade->render("html"));
-        $this->assertEquals("<!DOCTYPE html><html></html>", $this->jade->render("html",[], ['doctype' => 'html']));
+        $this->assertEquals("<!DOCTYPE html><html></html>", $this->jade->render("html",[], ['doctype' => 'html','prettyprint' => false]));
         $this->assertEquals("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML Basic 1.1//EN>", $this->jade->render("doctype html PUBLIC \"-//W3C//DTD XHTML Basic 1.1//EN"));
     }
 
@@ -48,7 +48,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '<img/>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
 
         $str = join("\r", [
             'p',
@@ -62,7 +62,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '<img/>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str));
+        $this->assertEquals($html, $this->jade->render($str, [], ['prettyprint' => false]));
 
         $str = join("\r\n", [
             'p',
@@ -76,7 +76,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '<img>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str,[], ['doctype' => 'html']));
+        $this->assertEquals($html, $this->jade->render($str,[], ['doctype' => 'html', 'prettyprint' => false]));
     }
 
     public function testSingleQuotes()
@@ -88,9 +88,9 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
     public function testBlockExpansion()
     {
-        $this->assertEquals("<li><a>foo</a></li><li><a>bar</a></li><li><a>baz</a></li>", $this->jade->render("li: a foo\nli: a bar\nli: a baz"));
-        $this->assertEquals("<li class=\"first\"><a>foo</a></li><li><a>bar</a></li><li><a>baz</a></li>", $this->jade->render("li.first: a foo\nli: a bar\nli: a baz"));
-        $this->assertEquals("<div class=\"foo\"><div class=\"bar\">baz</div></div>", $this->jade->render(".foo: .bar baz"));
+        $this->assertEquals("<li><a>foo</a></li><li><a>bar</a></li><li><a>baz</a></li>", $this->jade->render("li: a foo\nli: a bar\nli: a baz",[],['prettyprint' => false]));
+        $this->assertEquals("<li class=\"first\"><a>foo</a></li><li><a>bar</a></li><li><a>baz</a></li>", $this->jade->render("li.first: a foo\nli: a bar\nli: a baz",[],['prettyprint' => false]));
+        $this->assertEquals("<div class=\"foo\"><div class=\"bar\">baz</div></div>", $this->jade->render(".foo: .bar baz",[],['prettyprint' => false]));
     }
 
     public function testTags()
@@ -107,11 +107,11 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
             '<img/>'
         ]);
 
-        $this->assertEquals($html, $this->jade->render($str), 'Test basic tags');
+        $this->assertEquals($html, $this->jade->render($str,[],['prettyprint' => false]), 'Test basic tags');
         $this->assertEquals('<fb:foo-bar></fb:foo-bar>', $this->jade->render("fb:foo-bar"), 'Test hyphens');
-        $this->assertEquals('<div class=\"something\"></div>', $this->jade->render('div.something'), 'Test classes');
+        $this->assertEquals("<div class=\"something\"></div>", $this->jade->render('div.something'), 'Test classes');
         $this->assertEquals('<div id="something"></div>', $this->jade->render("div#something"), 'Test ids');
-        $this->assertEquals('<div class=\"something\"></div>', $this->jade->render('.something'), 'Test stand-alone classes');
+        $this->assertEquals("<div class=\"something\"></div>", $this->jade->render('.something'), 'Test stand-alone classes');
         $this->assertEquals('<div id="something"></div>', $this->jade->render('#something'), 'Test stand-alone ids');
         $this->assertEquals('<div id="foo" class="bar"></div>', $this->jade->render('#foo.bar'));
         $this->assertEquals('<div id="foo" class="bar"></div>', $this->jade->render('.bar#foo'));
@@ -477,62 +477,62 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<a href="/user/#{id}">ds</a>'
             , $this->jade->render('a(href="/user/\\#{id}") #{name}',  ['name' => 'ds']));
     }
-/*
+
     public function testAttrParens()
     {
-        $this->assertEquals('<p foo="bar">baz</p>", $this->jade->render('p(foo=((('bar"))))= ((('baz")))"));
+        $this->assertEquals('<p foo="bar">baz</p>', $this->jade->render("p(foo=((('bar'))))= ((('baz')))'"));
     }
 
     public function testCodeAttrs()
     {
-        $this->assertEquals('<p></p>", $this->jade->render('p(id= name)", "{ name: undefined }"));
-        $this->assertEquals('<p></p>", $this->jade->render('p(id= name)", "{ name: null }"));
-        $this->assertEquals('<p></p>", $this->jade->render('p(id= name)", "{ name: false }"));
-        $this->assertEquals('<p id=""></p>", $this->jade->render('p(id= name)", "{ name: '' }"));
-        $this->assertEquals('<p id="tj"></p>", $this->jade->render('p(id= name)", "{ name: 'tj' }"));
-        $this->assertEquals('<p id="default"></p>", $this->jade->render('p(id= name || "default")", "{ name: null }"));
-        $this->assertEquals('<p id="something"></p>", $this->jade->render('p(id= 'something")", "{ name: null }"));
-        $this->assertEquals('<p id="something"></p>", $this->jade->render('p(id = 'something")", "{ name: null }"));
-        $this->assertEquals('<p id="foo"></p>", $this->jade->render('p(id= (true ? 'foo' : 'bar"))"));
-        $this->assertEquals('<option value="">Foo</option>", $this->jade->render('option(value='") Foo"));
+        $this->assertEquals('<p></p>', $this->jade->render('p(id= name)', ["name" => "undefined"]));
+        $this->assertEquals('<p></p>', $this->jade->render('p(id= name)', ["name"=> "null"]));
+        $this->assertEquals('<p></p>', $this->jade->render('p(id= name)', ["name"=> "false"]));
+        $this->assertEquals('<p id=""></p>', $this->jade->render('p(id= name)', ["name"=> '']));
+        $this->assertEquals('<p id="tj"></p>', $this->jade->render('p(id= name)', ["name"=> "tj"]));
+        $this->assertEquals('<p id="default"></p>', $this->jade->render('p(id= name || "default")', ["name"=> "null"]));
+        $this->assertEquals('<p id="something"></p>', $this->jade->render('p(id= "something")', ["name"=> "null"]));
+        $this->assertEquals('<p id="something"></p>', $this->jade->render('p(id = "something")', ["name"=> "null"]));
+        $this->assertEquals('<p id="foo"></p>', $this->jade->render("p(id= (true ? 'foo' : 'bar'))"));
+        $this->assertEquals('<option value="">Foo</option>', $this->jade->render("option(value='') Foo"));
     }
 
     public function testCodeAttrsClass()
     {
-        $this->assertEquals('<p class="tj"></p>", $this->jade->render('p(class= name)", "{ name: 'tj' }"));
-        $this->assertEquals('<p class="tj"></p>", $this->jade->render('p( class= name )", "{ name: 'tj' }"));
-        $this->assertEquals('<p class="default"></p>", $this->jade->render('p(class= name || "default")", "{ name: null }"));
-        $this->assertEquals('<p class="foo default"></p>", $this->jade->render('p.foo(class= name || "default")", "{ name: null }"));
-        $this->assertEquals('<p class="default foo"></p>", $this->jade->render('p(class= name || "default").foo", "{ name: null }"));
-        $this->assertEquals('<p id="default"></p>", $this->jade->render('p(id = name || "default")", "{ name: null }"));
-        $this->assertEquals('<p id="user-1"></p>", $this->jade->render('p(id = "user-" + 1)"));
-        $this->assertEquals('<p class="user-1"></p>", $this->jade->render('p(class = "user-" + 1)"));
+        $this->assertEquals('<p class="tj"></p>', $this->jade->render('p(class= name)', ["name"=> "tj"]));
+        $this->assertEquals('<p class="tj"></p>', $this->jade->render('p( class= name )', ["name"=> "tj"]));
+        $this->assertEquals('<p class="default"></p>', $this->jade->render('p(class= name || "default")', ["name"=> "null"]));
+        $this->assertEquals('<p class="foo default"></p>', $this->jade->render('p.foo(class= name || "default")', ["name"=> "null"]));
+        $this->assertEquals('<p class="default foo"></p>', $this->jade->render('p(class= name || "default").foo', ["name"=> "null"]));
+        $this->assertEquals('<p id="default"></p>', $this->jade->render('p(id = name || "default")', ["name"=> "null"]));
+        $this->assertEquals('<p id="user-1"></p>', $this->jade->render('p(id = "user-" + 1)'));
+        $this->assertEquals('<p class="user-1"></p>', $this->jade->render('p(class = "user-" + 1)'));
     }
 
     public function testCodeBuffering()
     {
-        $this->assertEquals('<p></p>", $this->jade->render('p= null"));
-        $this->assertEquals('<p></p>", $this->jade->render('p= undefined"));
-        $this->assertEquals('<p>0</p>", $this->jade->render('p= 0"));
-        $this->assertEquals('<p>false</p>", $this->jade->render('p= false"));
+        $this->assertEquals('<p></p>', $this->jade->render('p= null'));
+        $this->assertEquals('<p></p>', $this->jade->render('p= undefined'));
+        $this->assertEquals('<p>0</p>', $this->jade->render('p= 0'));
+        $this->assertEquals('<p>false</p>', $this->jade->render('p= false'));
     }
-/*
+
     public function testScriptText()
     {
-        $str = join('\n", [
-            'script.",
-            '  p foo",
-            '",
-            'script(type="text/template")",
-            '  p foo",
-            '",
-            'script(type="text/template").",
+        $str = join("\n", [
+            'script.',
+            '  p foo',
+            '',
+            'script(type="text/template")',
+            '  p foo',
+            '',
+            'script(type="text/template").',
             '  p foo'
         ]);
 
-        $html = join('\n", [
+        $html = join("\n", [
             "<script>p" . " foo\n</script>",
-            '<script type="text/template"><p>foo</p></script>",
+            '<script type="text/template"><p>foo</p></script>',
             '<script type="text/template">p foo</script>'
         ]);
 
@@ -542,13 +542,13 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
     public function testComments()
     {
         // Regular
-        $str = join('\n", [
-            '//foo",
+        $str = join("\n", [
+            '//foo',
             'p bar'
         ]);
 
         $html = join("\n", [
-            '<!--foo-->",
+            '<!--foo-->',
             '<p>bar</p>'
         ]);
 
@@ -557,12 +557,12 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         // Arbitrary indentation
 
         $str = join("\n", [
-            '     //foo",
+            '     //foo',
             'p bar'
         ]);
 
         $html = join("\n", [
-            '<!--foo-->",
+            '<!--foo-->',
             '<p>bar</p>'
         ]);
 
@@ -571,14 +571,14 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         // Between tags
 
         $str = join("\n", [
-            'p foo",
-            '// bar ",
+            'p foo',
+            '// bar ',
             'p baz'
         ]);
 
         $html = join("\n", [
-            '<p>foo</p>",
-            '<!-- bar -->",
+            '<p>foo</p>',
+            '<!-- bar -->',
             '<p>baz</p>'
         ]);
 
@@ -586,15 +586,15 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Quotes
 
-        $str = "<!-- script(src: '/js/validate.js") -->";
-        $js = "// script(src: '/js/validate.js") ";
+        $str = "<!-- script(src: '/js/validate.js') -->";
+        $js = "// script(src: '/js/validate.js') ";
         $this->assertEquals($str, $this->jade->render($js));
     }
 
     public function testUnbufferedComments()
     {
         $str = join("\n", [
-            "//- foo",
+            '//- foo',
             'p bar'
         ]);
 
@@ -605,13 +605,13 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            'p foo",
-            '//- bar ",
+            'p foo',
+            '//- bar ',
             'p baz'
         ]);
 
         $html = join("\n", [
-            '<p>foo</p>",
+            '<p>foo</p>',
             '<p>baz</p>'
         ]);
 
@@ -625,28 +625,28 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
     public function testCode()
     {
-        $this->assertEquals("test", $this->jade->render("!= "test""));
-        $this->assertEquals("test", $this->jade->render("= "test""));
-        $this->assertEquals("test", $this->jade->render("- var foo = "test"\n=foo"));
-        $this->assertEquals("foo<em>test</em>bar", $this->jade->render("- var foo = "test"\n| foo\nem= foo\n| bar"));
-        $this->assertEquals("test<h2>something</h2>", $this->jade->render("!= "test"\nh2 something"));
+        $this->assertEquals("test", $this->jade->render('!= "test"'));
+        $this->assertEquals("test", $this->jade->render('= "test"'));
+        $this->assertEquals("test", $this->jade->render("- var foo = \"test\"\n=foo"));
+        $this->assertEquals("foo<em>test</em>bar", $this->jade->render("- var foo = \"test\"\n| foo\nem= foo\n| bar"));
+        $this->assertEquals("test<h2>something</h2>", $this->jade->render("!= \"test\"\nh2 something"));
 
         $str = join("\n", [
-            '- var foo = "<script>";",
-            '= foo",
+            '- var foo = "<script>";',
+            '= foo',
             '!= foo'
         ]);
 
         $html = join("", [
-            '&lt;script&gt;",
+            '&lt;script&gt;',
             '<script>'
         ]);
 
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            '- var foo = "<script>";",
-            '- if (foo)",
+            '- var foo = "<script>";',
+            '- if (foo)',
             '  p= foo'
         ]);
 
@@ -657,8 +657,8 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            '- var foo = "<script>";",
-            '- if (foo)",
+            '- var foo = "<script>";',
+            '- if (foo)',
             '  p!= foo'
         ]);
 
@@ -669,10 +669,10 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            '- var foo;",
-            '- if (foo)",
-            '  p.hasFoo= foo",
-            '- else",
+            '- var foo;',
+            '- if (foo)',
+            '  p.hasFoo= foo',
+            '- else',
             '  p.noFoo no foo'
         ]);
 
@@ -683,12 +683,12 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            '- var foo;",
-            '- if (foo)",
-            '  p.hasFoo= foo",
-            '- else if (true)",
-            '  p kinda foo",
-            '- else",
+            '- var foo;',
+            '- if (foo)',
+            '  p.hasFoo= foo',
+            '- else if (true)',
+            '  p kinda foo',
+            '- else',
             '  p.noFoo no foo'
         ]);
 
@@ -699,8 +699,8 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            'p foo",
-            '= "bar"",
+            'p foo',
+            '= "bar"',
         ]);
 
         $html = join("", [
@@ -710,9 +710,9 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            'title foo",
-            '- if (true)",
-            '  p something",
+            'title foo',
+            '- if (true)',
+            '  p something',
         ]);
 
         $html = join("", [
@@ -722,34 +722,34 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            'foo",
-            '  bar= "bar"",
-            '    baz= "baz"",
+            'foo',
+            '  bar= "bar"',
+            '    baz= "baz"',
         ]);
 
         $html = join("", [
-            '<foo>",
-            '<bar>bar",
-            '<baz>baz</baz>",
-            '</bar>",
+            '<foo>',
+            '<bar>bar',
+            '<baz>baz</baz>',
+            '</bar>',
             '</foo>'
         ]);
 
         $this->assertEquals($html, $this->jade->render($str));
     }
-/*
+
     public function testEach()
     {
         // Array
         $str = join("\n", [
-            '- var items = ["one", "two", "three"];",
-            '- each item in items",
+            '- var items = ["one", "two", "three"];',
+            '- each item in items',
             '  li= item'
         ]);
 
         $html = join("", [
-            '<li>one</li>",
-            '<li>two</li>",
+            '<li>one</li>',
+            '<li>two</li>',
             '<li>three</li>'
         ]);
 
@@ -757,14 +757,14 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Any enumerable (length property)
         $str = join("\n", [
-            '- var jQuery = { length: 3, 0: 1, 1: 2, 2: 3 };",
-            '- each item in jQuery",
+            '- var jQuery = { length: 3, 0: 1, 1: 2, 2: 3 };',
+            '- each item in jQuery',
             '  li= item'
         ]);
 
         $html = join("", [
-            '<li>1</li>",
-            '<li>2</li>",
+            '<li>1</li>',
+            '<li>2</li>',
             '<li>3</li>'
         ]);
 
@@ -772,8 +772,8 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Empty array
         $str = join("\n", [
-            '- var items = [];",
-            '- each item in items",
+            '- var items = [];',
+            '- each item in items',
             '  li= item'
         ]);
 
@@ -781,13 +781,13 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Object
         $str = join("\n", [
-            '- var obj = { foo: "bar", baz: "raz" };",
-            '- each val in obj",
+            '- var obj = { foo: "bar", baz: "raz" };',
+            '- each val in obj',
             '  li= val'
         ]);
 
         $html = join("", [
-            '<li>bar</li>",
+            '<li>bar</li>',
             '<li>raz</li>'
         ]);
 
@@ -795,13 +795,13 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Complex
         $str = join("\n", [
-            '- var obj = { foo: "bar", baz: "raz" };",
-            '- each key in Object.keys(obj)",
+            '- var obj = { foo: "bar", baz: "raz" };',
+            '- each key in Object.keys(obj)',
             '  li= key'
         ]);
 
         $html = join("", [
-            '<li>foo</li>",
+            '<li>foo</li>',
             '<li>baz</li>'
         ]);
 
@@ -809,13 +809,13 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Keys
         $str = join("\n", [
-            '- var obj = { foo: "bar", baz: "raz" };",
-            '- each val, key in obj",
+            '- var obj = { foo: "bar", baz: "raz" };',
+            '- each val, key in obj',
             '  li #{key}: #{val}'
         ]);
 
         $html = join("", [
-            '<li>foo: bar</li>",
+            '<li>foo: bar</li>',
             '<li>baz: raz</li>'
         ]);
 
@@ -823,10 +823,10 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         // Nested
         $str = join("\n", [
-            '- var users = [{ name: "tj" }]",
-            '- each user in users",
-            '  - each val, key in user",
-            '    li #{key} #{val}",
+            '- var users = [{ name: "tj" }]',
+            '- each user in users',
+            '  - each val, key in user',
+            '    li #{key} #{val}',
         ]);
 
         $html = join("", [
@@ -836,74 +836,74 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            '- var users = ["tobi", "loki", "jane"]",
-            'each user in users",
-            '  li= user",
+            '- var users = ["tobi", "loki", "jane"]',
+            'each user in users',
+            '  li= user',
         ]);
 
         $html = join("", [
-            '<li>tobi</li>",
-            '<li>loki</li>",
-            '<li>jane</li>",
+            '<li>tobi</li>',
+            '<li>loki</li>',
+            '<li>jane</li>',
         ]);
 
         $this->assertEquals($html, $this->jade->render($str));
 
         $str = join("\n", [
-            '- var users = ["tobi", "loki", "jane"]",
-            'for user in users",
-            '  li= user",
+            '- var users = ["tobi", "loki", "jane"]',
+            'for user in users',
+            '  li= user',
         ]);
 
         $html = join("", [
-            '<li>tobi</li>",
-            '<li>loki</li>",
-            '<li>jane</li>",
+            '<li>tobi</li>',
+            '<li>loki</li>',
+            '<li>jane</li>',
         ]);
-/*
+
         $this->assertEquals($html, $this->jade->render($str));
     }
 
     public function testIf()
     {
         $str = join("\n", [
-            '- var users = ["tobi", "loki", "jane"]",
-            'if users.length",
-            '  p users: #{users.length}",
+            '- var users = ["tobi", "loki", "jane"]',
+            'if users.length',
+            '  p users: #{users.length}',
         ]);
 
         $this->assertEquals("<p>users: 3</p>", $this->jade->render($str));
 
-        $this->assertEquals("<iframe foo="bar"></iframe>", $this->jade->render("iframe(foo="bar")"));
+        $this->assertEquals('<iframe foo="bar"></iframe>', $this->jade->render('iframe(foo="bar")'));
     }
-/*
+
     public function testUnless()
     {
         $str = join("\n", [
-            '- var users = ["tobi", "loki", "jane"]",
-            'unless users.length",
-            '  p no users",
+            '- var users = ["tobi", "loki", "jane"]',
+            'unless users.length',
+            '  p no users',
         ]);
 
         $this->assertEquals("", $this->jade->render($str));
 
         $str = join("\n", [
-            '- var users = []",
-            'unless users.length",
-            '  p no users",
+            '- var users = []',
+            'unless users.length',
+            '  p no users',
         ]);
 
         $this->assertEquals("<p>no users</p>", $this->jade->render($str));
     }
-/*
+
     public function testElse()
     {
         $str = join("\n", [
-            '- var users = []",
-            'if users.length",
-            '  p users: #{users.length}",
-            'else",
-            '  p users: none",
+            '- var users = []',
+            'if users.length',
+            '  p users: #{users.length}',
+            'else',
+            '  p users: none',
         ]);
 
         $this->assertEquals("<p>users: none</p>", $this->jade->render($str));
@@ -912,29 +912,29 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
     public function testElseIf()
     {
         $str = join("\n", [
-            '- var users = ["tobi", "jane", "loki"]",
-            'for user in users",
-            '  if user == "tobi"",
-            '    p awesome #{user}",
-            '  else if user == "jane"",
-            '    p lame #{user}",
-            '  else",
-            '    p #{user}",
+            '- var users = ["tobi", "jane", "loki"]',
+            'for user in users',
+            '  if user == "tobi"',
+            '    p awesome #{user}',
+            '  else if user == "jane"',
+            '    p lame #{user}',
+            '  else',
+            '    p #{user}',
         ]);
 
         $this->assertEquals("<p>awesome tobi</p><p>lame jane</p><p>loki</p>", $this->jade->render($str));
     }
-
+/*
     public function testIncludeBlock()
     {
         $str = join("\n", [
-            'html",
-            '  head",
-            '    include fixtures/scripts",
-            '      scripts(src="/app.js")",
+            'html',
+            '  head',
+            '    include fixtures/scripts',
+            '      scripts(src="/app.js")',
         ]);
 
-        $this->assertEquals("<html><head><script src=\"/jquery.js\"></script><script src=\"/caustic.js\"></script><scripts src=\"/app.js\"></scripts></head></html>'
+        $this->assertEquals("<html><head><script src=\"/jquery.js\"></script><script src=\"/caustic.js\"></script><scripts src=\"/app.js\"></scripts></head></html>"
             , $this->jade->render($str, "{ filename: " . __DIR__ . DIRECTORY_SEPARATOR . 'jade.test.js' . "}"));
     }*/
 }

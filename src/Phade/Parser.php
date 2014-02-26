@@ -348,9 +348,7 @@ class Parser
 
     private function parseDoctype()
     {
-        echo __METHOD__ ."\n";
         $tok = $this->expect('doctype');
-        echo "token: \n";
         $node = new Doctype($tok->val);
         $node->line = $this->line();
         return $node;

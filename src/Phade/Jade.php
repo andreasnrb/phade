@@ -1,6 +1,6 @@
 <?php
 namespace Phade;
-include "../vendor/cyonite/underscore.php/lib/skillshare/underscore.php";
+//include "vendor/cyonite/underscore.php/lib/skillshare/underscore.php";
 
 use Phade\Exceptions\PhadeParseException;
 
@@ -74,7 +74,6 @@ class Jade
         };
         //$fn = function($locals, $jade = null) use (&$fn) { return $fn($locals);};
         return function ($locals = []) use (&$fn, &$scope) {
-            echo $fn, "\n";
             ob_start();
             extract($locals);
             extract($scope);
@@ -94,8 +93,6 @@ class Jade
      */
     private function parse($str, $options = [])
     {
-
-        echo $str, "\n";
         if (is_array($options))
             $options = (object)$options;
         $parserClass = (isset($options->parser)) ? $options->parser : 'Phade\\Parser';

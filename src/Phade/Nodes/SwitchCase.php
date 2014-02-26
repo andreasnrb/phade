@@ -3,7 +3,7 @@
 namespace Phade\Nodes;
 
 
-class SwitchCase {
+class SwitchCase extends Node {
 
     public $block;
     public $line;

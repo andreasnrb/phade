@@ -126,7 +126,6 @@ class Compiler {
     public function buffer($str, $interpolate = false) {
         if ($interpolate) {
             preg_match('/(\\\\)?([#!]){((?:.|\n)*)/sim', $str, $match, PREG_OFFSET_CAPTURE);
-            echo "############### BUFFER ###################\n".$str."\n";
             if ($match) {
                 /** match.index */
                 $this->buffer(mb_substr($str,0, $match[0][1]), false);
@@ -747,7 +746,6 @@ class Compiler {
     private function convertJStoPHP($src, $type ='') {
         $isVar = $newVar = true;
         $phpSrc='';
-        var_dump($src);
         if (ctype_digit($src) || __()->isNumber($src)) {
             return $src;
         }
@@ -771,7 +769,6 @@ class Compiler {
         if (strpos($phpSrc,'||') !== false) {
             $array = explode('||', $phpSrc);
             array_walk($array, function(&$value, $key) { $value = trim($value); });
-            var_dump($array);
             if (($i = __()->indexOf($array,'$undefined'))>=0) {
                 unset($array[$i]);
                 return array_pop($array);

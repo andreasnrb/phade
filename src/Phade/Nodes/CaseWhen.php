@@ -9,6 +9,6 @@
 namespace Phade\Nodes;
 
 
-class CaseWhen {
+class CaseWhen extends Node {
 
 } 
