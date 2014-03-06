@@ -17,4 +17,10 @@ class Each extends Node {
     public $obj;
     public $key;
     public $val;
+
+    function __construct($code, $val, $key) {
+    	$this->obj = $code;
+    	$this->val = $val;
+    	$this->key = $key;
+    }
 }

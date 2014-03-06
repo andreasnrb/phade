@@ -384,7 +384,7 @@ class Parser
         $node = new Each($tok->code, $tok->val, $tok->key);
         $node->line = $this->line();
         $node->block = $this->block();
-        if ($this->peek()->getType() == 'code' && $this->peek()->val == 'else') {
+        if ($this->peek()->getType() == 'code' && $this->peek()->val == 'else:') {
             $this->advance();
             $node->alternative = $this->block();
         }
