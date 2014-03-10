@@ -248,6 +248,7 @@ class Compiler {
 
     public function visitNode($node){
         $name = basename(get_class($node));
+        $name = str_replace('Phade\\Nodes\\', '', $name);
         return $this->{'visit' . $name}($node);
     }
 
@@ -595,46 +596,23 @@ class Compiler {
      * @api public
      */
     public function visitEach($each){
-        array_push($this->buf, ''
-            . '// iterate ' . $each->obj ."\n"
-            . ';(function(){'."\n"
-            . '  $obj = ' . $each->obj . ';'."\n"
-            . '  if (\'number\' == typeof sizeof($obj)) {'."\n");
-
-        if ($each->alternative) {
-            array_push($this->buf, '  if (sizeof($obj)) {');
-        }
-
-        array_push($this->buf, ''
-            . '    for ($' . $each->key . ' = 0;$l = sizeof($obj); $' . $each->key . ' < $l; $' . $each->key . '++) {'."\n"
-            . '      $' . $each->val . ' = $obj[' . $each->key . '];'."\n");
-
+        array_push($this->buf,
+            '    if (is_array($' . $each->obj . ') && count($' . $each->obj . ') > 0) {'."\n");
+        array_push($this->buf,
+            '      foreach ($' . $each->obj . ' as $' . $each->val . ') {'."\n");
         $this->visit($each->block);
-
-        array_push($this->buf, '    }'."\n");
-
-        if ($each->alternative) {
-            array_push($this->buf, '  } else {');
+        array_push($this->buf,
+            '      }'."\n");
+        if (!$each->alternative) {
+            array_push($this->buf,
+            '    }'."\n");
+        } else {
+            array_push($this->buf,
+            '    } else {'."\n");
             $this->visit($each->alternative);
-            array_push($this->buf, '  }');
+            array_push($this->buf,
+            '    }'."\n");
         }
-
-        array_push($this->buf, ''
-            . '  } else {'."\n"
-            . '    $l = 0;'."\n"
-            . '    for ($' . $each->key . ' in $obj) {'."\n"
-            . '      $l++;'
-            . '      $' . $each->val . ' = $obj[' . $each->key . '];'."\n");
-
-        $this->visit($each->block);
-
-        array_push($this->buf, '    }'."\n");
-        if ($each->alternative) {
-            array_push($this->buf, '    if ($l === 0) {');
-            $this->visit($each->alternative);
-            array_push($this->buf, '    }');
-        }
-        array_push($this->buf, '  }'."\n".'}).call(this);'."\n");
     }
 
     /**
