@@ -1,4 +1,5 @@
 <?php
+define('PHADE_TEST_DEBUG', true);
 include "vendor/autoload.php";
 include "vendor/cyonite/underscore.php/lib/skillshare/underscore.php";
 

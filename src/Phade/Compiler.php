@@ -562,7 +562,8 @@ class Compiler {
             if ($code->escape) $val = 'phade_escape(' . $val . ')';
             $this->bufferExpression($val);
         } else {
-            array_push($this->buf, $this->parseCode($code->val));
+            $php = $this->convertJStoPHP($code->val);
+            array_push($this->buf, $this->parseCode($php));
         }
 
         // Block support
@@ -668,6 +669,9 @@ class Compiler {
                     $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'keyvaluearray') . ') ."';
                     $escaped[$attr['name']] = false;
 
+                } elseif(preg_match('/(.+\+\s)([\w\d]+).*?/', $attr['val'], $captures)) {
+                    $escaped[$attr['name']] = false;
+                    $attr['val'] = '" . ('. str_replace('+',' . ', $captures[1]) . $this->convertJStoPHP($captures[2], 'var') . ') ."';
                 }
                 array_push($buf, $attr);
             }
@@ -722,11 +726,20 @@ class Compiler {
     }
 
     private function convertJStoPHP($src, $type ='') {
+        /**
+         * (\bvar\s+\b|.+\+\s)([\w\d]+).*? captures var (var), 'asd' + (var)
+         */
+        if (defined('PHADE_TEST_DEBUG') && PHADE_TEST_DEBUG)
+            echo __METHOD__,': ', $src,"\n";
         $isVar = $newVar = true;
         $phpSrc='';
+        if ('var' == $type)
+            return '$' . $src;
         if (ctype_digit($src) || __()->isNumber($src)) {
             return $src;
         }
+        if ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src))
+            return $code;
         if ( $this->characterParser->isType($src))
             return "'$src'";
         if ($this->characterParser->isNull($src))
