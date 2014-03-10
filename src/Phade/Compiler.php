@@ -111,7 +111,7 @@ class Compiler {
      * @param $name
      */
     public function setDoctype($name = 'default') {
-        $this->doctype = isset($this->doctypes[strtolower($name)])? $this->doctypes[strtolower($name)] : "<!DOCTYPE $name>";
+        $this->doctype = isset($this->doctypes[strtolower($name)])? $this->doctypes[strtolower($name)] : "<!DOCTYPE " . addslashes($name) .">";
         $this->terse = strtolower($this->doctype) == '<!doctype html>';
         $this->xml = 0 === strpos($this->doctype, '<?xml');
     }
