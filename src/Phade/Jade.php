@@ -75,7 +75,7 @@ class Jade
         //$fn = function($locals, $jade = null) use (&$fn) { return $fn($locals);};
         return function ($locals = []) use (&$fn, &$scope) {
             if (defined('PHADE_TEST_DEBUG') && PHADE_TEST_DEBUG)
-                print_r($fn);
+                echo print_r($fn, true),"\n";
             ob_start();
             extract($locals);
             extract($scope);

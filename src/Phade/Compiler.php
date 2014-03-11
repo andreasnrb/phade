@@ -137,7 +137,11 @@ class Compiler {
                     try {
                         $rest = $match[3][0];
                         $range = $this->parseJSExpression($rest);
-                        $code = $this->convertJStoPHP($range->src);
+                        if (preg_match('/^([\w\d_]+)$/', $range->src))
+                            $code = $this->convertJStoPHP($range->src, 'var');
+                        else {
+                            $code = $this->convertJStoPHP($range->src);
+                        }
                         if (strlen($code))
                             $code = (('!' == $match[2][0] ? '' : 'phade_escape') . '( ' . $code .')');
                         else
@@ -726,6 +730,7 @@ class Compiler {
     }
 
     private function convertJStoPHP($src, $type ='') {
+
         /**
          * (\bvar\s+\b|.+\+\s)([\w\d]+).*? captures var (var), 'asd' + (var)
          */
@@ -735,11 +740,14 @@ class Compiler {
         $phpSrc='';
         if ('var' == $type)
             return '$' . $src;
+
         if (ctype_digit($src) || __()->isNumber($src)) {
             return $src;
         }
-        if ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src))
+
+        if ($src != ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src)))
             return $code;
+
         if ( $this->characterParser->isType($src))
             return "'$src'";
         if ($this->characterParser->isNull($src))
@@ -760,6 +768,9 @@ class Compiler {
         if (strpos($phpSrc,'||') !== false) {
             $array = explode('||', $phpSrc);
             array_walk($array, function(&$value, $key) { $value = trim($value); });
+            /**
+             * @var int $i
+             */
             if (($i = __()->indexOf($array,'$undefined'))>=0) {
                 unset($array[$i]);
                 return array_pop($array);
