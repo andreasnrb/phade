@@ -137,15 +137,27 @@ class Compiler {
                     try {
                         $rest = $match[3][0];
                         $range = $this->parseJSExpression($rest);
-                        if (preg_match('/^([\w\d_]+)$/', $range->src))
+                        $escape = true;
+                        if ($this->characterParser->isNull($range->src)) {
+                            $escape = false;
+                            $code = '';
+                        } elseif (in_array($range->src, array('false', 'true'))) {
+                            $escape = false;
+                            $code = '"' . $range->src . '"';
+                        } elseif (strlen($range->src) === strlen(((int)$range->src))) {
+                            $escape = false;
+                            $code = $range->src;
+                        } elseif (preg_match('/^([\w\d_]+)$/', $range->src) && !__($range->src)->isNumber()) {
                             $code = $this->convertJStoPHP($range->src, 'var');
-                        else {
+                        } else {
                             $code = $this->convertJStoPHP($range->src);
                         }
-                        if (strlen($code))
+
+                        if ($escape && strlen($code) && !__($code)->isNumber())
                             $code = (('!' == $match[2][0] ? '' : 'phade_escape') . '( ' . $code .')');
-                        else
+                        elseif(strlen($code) == 0)
                             $code = "''";
+
                     } catch (\Exception $ex) {
                         //didn't $match, just as if escaped
                         $this->buffer($match[2][0] . '{', false);
@@ -667,7 +679,7 @@ class Compiler {
                 array_push($classes, $attr['val']);
             } else {
                 if (preg_match('/(\[.*\])(\[\d+\])/', $attr['val'])) {
-                    $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'array') . ') ."';
+                    $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'array') . ') . "';
                     $escaped[$attr['name']] = false;
                 } elseif(preg_match('/(\{(.*)\})(\[.+\])/', $attr['val'])) {
                     $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val'], 'keyvaluearray') . ') ."';
@@ -738,6 +750,8 @@ class Compiler {
             echo __METHOD__,': ', $src,"\n";
         $isVar = $newVar = true;
         $phpSrc='';
+        if ($this->characterParser->isNull($src))
+            return '';
         if ('var' == $type)
             return '$' . $src;
 
@@ -765,6 +779,7 @@ class Compiler {
             }
             $phpSrc .= $src[$i];
         }
+
         if (strpos($phpSrc,'||') !== false) {
             $array = explode('||', $phpSrc);
             array_walk($array, function(&$value, $key) { $value = trim($value); });

@@ -381,7 +381,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<img src="&lt;script&gt;"/>', $this->jade->render('img(src="<script>")'), 'Test attr escaping');
 
         $this->assertEquals('<a data-attr="bar"></a>', $this->jade->render('a(data-attr="bar")'));
-       $this->assertEquals('<a data-attr="bar" data-attr-2="baz"></a>', $this->jade->render('a(data-attr="bar", data-attr-2="baz")'));
+        $this->assertEquals('<a data-attr="bar" data-attr-2="baz"></a>', $this->jade->render('a(data-attr="bar", data-attr-2="baz")'));
 
         $this->assertEquals('<a title="foo,bar"></a>', $this->jade->render('a(title= "foo,bar")'));
         $this->assertEquals('<a title="foo,bar"></a>', $this->jade->render('a(title="foo,bar")'));
@@ -389,7 +389,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('<p class="foo"></p>', $this->jade->render("p(class='foo')"), 'Test single quoted attrs');
         $this->assertEquals('<input type="checkbox" checked="checked"/>', $this->jade->render('input( type="checkbox", checked )'));
-       $this->assertEquals('<input type="checkbox" checked="checked"/>', $this->jade->render('input( type="checkbox", checked = true )'));
+        $this->assertEquals('<input type="checkbox" checked="checked"/>', $this->jade->render('input( type="checkbox", checked = true )'));
         $this->assertEquals('<input type="checkbox"/>', $this->jade->render('input(type="checkbox", checked= false)'));
         $this->assertEquals('<input type="checkbox"/>', $this->jade->render('input(type="checkbox", checked= null)'));
         $this->assertEquals('<input type="checkbox"/>', $this->jade->render('input(type="checkbox", checked= undefined)'));

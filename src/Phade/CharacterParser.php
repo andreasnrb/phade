@@ -199,7 +199,7 @@ class CharacterParser {
     }
 
     function isNull($src) {
-        return is_null($src) || $src == 'null' || $src == 'undefined' || empty($src);
+        return is_null($src) || $src == 'null' || $src == 'undefined' || strlen($src) == 0;
     }
     function isType($src) {
         switch($src) {

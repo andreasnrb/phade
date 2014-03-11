@@ -569,8 +569,8 @@ class Lexer
                     $val = trim($val);
                     if (isset($val[0]) && $val[0] == '"')
                         $val = trim($val,'"');
-                    /*elseif (isset($val[0]) && $val[0] == '\'')
-                        $val = trim($val,'\'');*/
+                    elseif (isset($val[0]) && $val[0] == '\'' && $val[strlen($val)-1] == '\'')
+                        $val = trim($val,'\'');
                     if ($val) $this->assertExpression($val);
                     $key = trim($key);
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
