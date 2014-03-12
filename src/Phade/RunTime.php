@@ -57,14 +57,30 @@ function phade_attrs($obj, $escaped)
             $attr = $obj[$i];
             $key = $attr['name'];
             $val = $attr['val'];
-            if ($val == '' || $val == 1 || is_bool($val) || null == $val || $val == 'true' || in_array($val, ['false', 'null', 'undefined'])) {
-                if ($val == 1 || $val == 'true' || ($val && !in_array($val, ['false', 'null', 'undefined']))) {
+            if (   $val == 1
+                || null === $val
+                || $val === true
+                || in_array($val, ['false', 'null', 'undefined'])
+                || in_array($key, ['checked', 'disabled'])
+                ) {
+                if (   $val == 1
+                    || $val === true
+                    || ($val && !in_array($val, ['false', 'null', 'undefined'])
+                    && ($val !==false && in_array($key, ['checked', 'disabled']))
+                    || ($val !==false && !in_array($key, ['checked', 'disabled'])))
+                ) {
                     if (substr($key, 0, 5) == 'data-')
                         array_push($buf, $key . '=\"' . $val . '\"');
                     else
                         $terse
                             ? array_push($buf, $key)
                             : array_push($buf, $key . '=\"' . $key . '\"');
+                } elseif($val !== false && !in_array($key, ['checked', 'disabled'])) {
+                    array_push($buf, $key . '=\"' . $val . '\"');
+                } elseif(!$terse && $val === '' && in_array($key, ['checked', 'disabled'])) {
+                    array_push($buf, $key . '=\"' . $key . '\"');
+                } elseif ($val !== false && !in_array($val, ['false', 'null', 'undefined'])) {
+                    array_push($buf, $key);
                 }
             } else if (0 === strpos($key, 'data') && !is_string($val)) {
                 array_push($buf, $key . "='" . preg_replace("/'/", '&apos;', json_encode($val)) . "'");
@@ -80,7 +96,8 @@ function phade_attrs($obj, $escaped)
                 }
             } else if ($escaped && $escaped[$key]) {
                 array_push($buf, $key . '=\"' . phade_escape($val) . '\"');
-            } else {
+            } elseif (false !== $val) {
+                $val = $val == '' ? $key : $val;
                 array_push($buf, $key . '=\"' . $val . '\"');
             }
         }

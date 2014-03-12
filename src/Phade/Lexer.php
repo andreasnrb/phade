@@ -571,10 +571,16 @@ class Lexer
                         $val = trim($val,'"');
                     elseif (isset($val[0]) && $val[0] == '\'' && $val[strlen($val)-1] == '\'')
                         $val = trim($val,'\'');
+                    elseif ('false' == $val)
+                        $val = false;
+                    elseif ('true' == $val)
+                        $val = true;
+
                     if ($val) $this->assertExpression($val);
                     $key = trim($key);
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-                    $token->attrs[] = ['name' => $key,'val' => '' == $val ? true : $val, 'escaped' => $escapedAttr];
+
+                    $token->attrs[] = ['name' => $key,'val' => $val, 'escaped' => $escapedAttr];
                     $key = $val = '';
                     $loc = 'key';
                     $escapedAttr = false;

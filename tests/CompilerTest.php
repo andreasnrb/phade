@@ -324,7 +324,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("<p>click<a>Google</a>.</p>", $this->jade->render("p\n  | click\n  a Google\n  | ."));
         $this->assertEquals("<p>(parens)</p>", $this->jade->render("p (parens)"));
         $this->assertEquals('<p foo="bar">(parens)</p>', $this->jade->render('p(foo="bar") (parens)'));
-        $this->assertEquals('<option value="">-- (optional) foo --</option>', $this->jade->render('option(value="") -- (optional) foo --'));
+        $this->assertEquals('<option value="">-- (optional) foo --</option>', $this->jade->render('option(value="") -- (optional) foo --', []));
     }
 
 
