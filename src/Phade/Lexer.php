@@ -575,11 +575,12 @@ class Lexer
                         $val = false;
                     elseif ('true' == $val)
                         $val = true;
-
+                    $val = trim($val);
+                    if ($val[strlen($val)-1] == '.')
+                        $val .= '"';
                     if ($val) $this->assertExpression($val);
                     $key = trim($key);
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-
                     $token->attrs[] = ['name' => $key,'val' => $val, 'escaped' => $escapedAttr];
                     $key = $val = '';
                     $loc = 'key';
@@ -626,6 +627,7 @@ class Lexer
                             $interpolatable .= $str[$i];
                             if (!$state->isString()) {
                                 $loc = 'value';
+                                $interpolatable = trim($interpolatable,"'");
                                 $val .= $this->interpolate($interpolatable, $quote);
                             }
                             break;
@@ -642,7 +644,6 @@ class Lexer
 
     private function interpolate($attr, $quote)
     {
-
         return str_replace('\#{', '#{', preg_replace_callback('/(\\\\)?#{(.+)/', function ($_) use (&$quote) {
             $escape = $_[1];
             $expr = $_[2];
@@ -652,7 +653,9 @@ class Lexer
                 $range = (new CharacterParser())->parseMax($expr);
                 if ($expr[$range->end] !== '}') return mb_substr($_, 0, 2) . $this->interpolate(mb_substr($_, 2), $quote);
                 self::assertExpression($range->src);
-                return "$" . $range->src .$quote . $this->interpolate(mb_substr($expr, $range->end + 1), $quote);
+                $data = $this->interpolate(mb_substr($expr, $range->end + 1), $quote);
+                $data =  '" . phade_escape($' . $range->src .') . "' . $data;
+                return  str_replace('""','"', $data);
             } catch (\Exception $ex) {
                 return mb_substr($_, 0, 2) . $this->interpolate(mb_substr($_, 2), $quote);
             }

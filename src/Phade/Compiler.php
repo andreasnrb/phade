@@ -662,7 +662,6 @@ class Compiler {
         $escaped = [];
         $constant = array_walk($attrs, function($attr){ return $this->isConstant($attr['val']);});
         $inherits = false;
-
         if ($this->terse) array_push($buf, ['terse' => 'true']);
 
         foreach($attrs as $attr) {

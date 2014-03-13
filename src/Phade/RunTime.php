@@ -50,7 +50,6 @@ function phade_attrs($obj, $escaped)
     }
     $keys = array_keys($obj);
     $len = sizeof($keys);
-
     if ($len) {
         array_push($buf, '');
         for ($i = 0; $i < $len; ++$i) {
@@ -95,7 +94,7 @@ function phade_attrs($obj, $escaped)
                     }
                 }
             } else if ($escaped && $escaped[$key]) {
-                array_push($buf, $key . '=\"' . phade_escape($val) . '\"');
+                array_push($buf, $key . '=\"' . $val . '\"');
             } elseif (false !== $val) {
                 $val = $val == '' ? $key : $val;
                 array_push($buf, $key . '=\"' . $val . '\"');
