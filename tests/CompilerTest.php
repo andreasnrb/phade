@@ -480,7 +480,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
     public function testAttrParens()
     {
-        $this->assertEquals('<p foo="bar">baz</p>', $this->jade->render("p(foo=((('bar'))))= ((('baz')))'"));
+        $this->assertEquals('<p foo="bar">baz</p>', $this->jade->render("p(foo=((('bar'))))= ((('baz')))"));
     }
 
     public function testCodeAttrs()

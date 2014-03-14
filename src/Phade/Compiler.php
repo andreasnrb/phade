@@ -571,7 +571,7 @@ class Compiler {
         // since they are usually flow control
         // Buffer code
         if ($code->buffer) {
-            $val = ltrim($code->val);
+            $val = trim($code->val);
             $val = $this->parseCode($val);
             if(strpos($val, '$') !== false)
                 $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';

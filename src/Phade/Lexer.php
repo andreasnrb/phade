@@ -491,6 +491,7 @@ class Lexer
             $this->consume(mb_strlen($captures[0]));
             $flags = $captures[1];
             $captures[1] = $captures[2];
+            $captures[1] = preg_replace('/\(+(.*?)\)+/','$1',$captures[1] );
             $token = $this->token('code', $captures[1]);
             $token->escape = $flags[0] === '=';
             $token->buffer = '=' === $flags[0] || (isset($flags[1]) && '=' === $flags[1]);
@@ -580,6 +581,7 @@ class Lexer
                         $val .= '"';
                     if ($val) $this->assertExpression($val);
                     $key = trim($key);
+                    $val = preg_replace('/\(+(.*?)\)+/','$1',$val);
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
                     $token->attrs[] = ['name' => $key,'val' => $val, 'escaped' => $escapedAttr];
                     $key = $val = '';
@@ -654,7 +656,7 @@ class Lexer
                 if ($expr[$range->end] !== '}') return mb_substr($_, 0, 2) . $this->interpolate(mb_substr($_, 2), $quote);
                 self::assertExpression($range->src);
                 $data = $this->interpolate(mb_substr($expr, $range->end + 1), $quote);
-                $data =  '" . phade_escape($' . $range->src .') . "' . $data;
+                $data =  '" . phade_escape($' . preg_replace('/\(+(.*?)\)+/','$1',$range->src ) .') . "' . $data;
                 return  str_replace('""','"', $data);
             } catch (\Exception $ex) {
                 return mb_substr($_, 0, 2) . $this->interpolate(mb_substr($_, 2), $quote);
