@@ -444,7 +444,6 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('<meta content="what\'s up? \'weee\'"/>', $this->jade->render('meta(content="what\'s up? \'weee\'")'));
     /**/}
 
-    //TODO: Add support for ClassAttrArray
     public function testClassAttrArray()
     {
         $this->assertEquals('<body class="foo bar baz"></body>', $this->jade->render('body(class=["foo", "bar", "baz"])'));

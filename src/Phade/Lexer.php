@@ -589,7 +589,7 @@ class Lexer
                     /*if(is_string($val))
                         $val = preg_replace('/\(+(.*?)\)+/','$1',$val)*/
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-                    $token->attrs[] = ['name' => trim($key),'val' => is_string($val)?htmlspecialchars($val):$val, 'escaped' => $escapedAttr];
+                    $token->attrs[] = ['name' => trim($key),'val' => is_string($val) && !preg_match('/\[.*\]/',$val)?htmlspecialchars($val):$val, 'escaped' => $escapedAttr];
                     $quote = $key = $val = '';
                     $loc = 'key';
                     $escapedAttr = false;
