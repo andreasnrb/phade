@@ -672,8 +672,6 @@ class Parser
      */
     private function tag($tag)
     {
-
-
         $dot = true;
         $tag->line = $this->line();
 
@@ -696,7 +694,7 @@ class Parser
                     $obj = $tok->attrs;
                     if ($tok->selfClosing) $tag->selfClosing = true;
                     foreach($obj as $attr) {
-                        $tag->setAttribute($attr['name'], $attr['val'], $attr['escaped']);
+                        $tag->setAttribute($attr['name'], $attr['val'], $attr['escaped'], $attr['code']);
                     }
                     continue;
                 default:

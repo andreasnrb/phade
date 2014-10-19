@@ -587,11 +587,9 @@ class Compiler {
         if ($code->buffer) {
             $val = trim($code->val);
             $val = $this->parseCode($val);
-            if(strpos($val, '$') !== false)
-                $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';
+            if (strpos($val, '$') !== false) $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';
             if ($code->escape) $val = 'phade_escape(' . $val . ')';
-            if($this->pp)
-                $this->prettyIndent(1,true);
+            if ($this->pp) $this->prettyIndent(1, true);
             $this->bufferExpression($val);
         } else {
             $php = $this->convertJStoPHP($code->val);
@@ -662,7 +660,8 @@ class Compiler {
             $this->bufferExpression("jade.attrs(jade.merge({ " . $val->buf .
                 " }, attributes), jade.merge(" . $val->escaped . ", escaped, true))");
         } else if ($val->constant) {
-            $this->buffer(phade_attrs($val->buf, $val->escaped));
+            $val=phade_attrs($val->buf, $val->escaped, $this->options->scope);
+            $this->buffer($val);
         } else {
 //            $this->bufferExpression('$phade_attrs({ ' . $val->buf . " }, " . $val->escaped . ")");
         }
@@ -678,12 +677,14 @@ class Compiler {
         $constant = array_walk($attrs, function($attr){ return $this->isConstant($attr['val']);});
         $inherits = false;
         if ($this->terse) array_push($buf, ['terse' => 'true']);
-
         foreach($attrs as $attr) {
             if ($attr['name'] == 'attributes') return $inherits = true;
             $escaped[$attr['name']] = $attr['escaped'];
             if ($attr['name'] == 'class') {
-                if (preg_match('/(\[.*\])(\[\d+\])?/', $attr['val'])) {
+                if($attr['code'] && !preg_match('/(\[.*\])(\[\d+\])?/', $attr['val'])) {
+                    $attr['val'] = '" . ('.$this->convertJStoPHP($attr['val']) . ') ."';
+                    $escaped[$attr['name']] = false;
+                } elseif (preg_match('/(\[.*\])(\[\d+\])?/', $attr['val'])) {
                     $attr['val'] = '" . (implode(\' \','.$this->convertJStoPHP($attr['val'], 'array') . ')) ."';
                     $escaped[$attr['name']] = false;
                 } elseif(preg_match('/(\{(.*)\})(\[.+\])/', $attr['val'])) {
@@ -703,7 +704,6 @@ class Compiler {
                     $escaped[$attr['name']] = false;
                     $attr['val'] = '" . ('. str_replace('+',' . ', $captures[1]) . $this->convertJStoPHP($captures[2], 'var') . ') ."';
                 }
-                //Only add attribute if its value is set
                 array_push($buf, $attr);
             }
         }
@@ -823,6 +823,7 @@ class Compiler {
                 $src = implode(',', $temp);
                 return str_replace('}',']',str_replace('{','[', $src));
             }
+            $phpSrc = preg_replace('/(\".+\")\ *(\+\ *(\d+))/','$1."$3"',$phpSrc);
             return $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
         }
         return $phpSrc;

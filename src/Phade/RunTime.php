@@ -1,6 +1,8 @@
 <?php
 
-function phade_merge($a, $b)
+use Phade\CharacterParser;
+
+function phade_merge($a, $b, $scope)
 {
     if (!isset($a['class']) && !isset($b['class']))
         return array_merge($a, $b);
@@ -40,7 +42,7 @@ function phade_nulls($val)
     return $val != '' && !in_array($val, [null, 'null', '', 'undefined']);
 }
 
-function phade_attrs($obj, $escaped)
+function phade_attrs($obj, $escaped, $scope=[])
 {
     $buf = [];
     $terse = isset($obj[0]['terse']) ? $obj[0]['terse'] : false;
@@ -56,6 +58,26 @@ function phade_attrs($obj, $escaped)
             $attr = $obj[$i];
             $key = $attr['name'];
             $val = $attr['val'];
+            echo "\n ----- \n";
+            var_dump($attr);            echo "\n ------ \n";
+            var_dump($val);            echo "\n ------ \n";
+            var_dump($scope);            echo "\n ------ \n";
+//            $test=array_key_exists($val,$scope);
+//            var_dump($test);            echo "\n ------ \n";
+            if(isset($attr['code']) && $attr['code']) {
+                if(in_array($val, ['false', 'null', 'undefined'],true)) {
+                    $val = false;
+                } elseif(in_array($val,['true'], true)) {
+                    $val = true;
+                } elseif ($scope && array_key_exists($val,$scope)) {
+                    $val = $scope[$val];
+                    if(is_null($val))
+                        $val = false;
+                } elseif (!in_array($val, [true, false, 'false', 'true'], true)) {
+                    $val = preg_replace('/"\ ?\.(.*)\ \.\ ?"/','$1', $val);
+                    $val = '".(' . phade_convertJStoPHP($val) . ')."';
+                }
+            }
             if (   $val == 1
                 || null === $val
                 || $val === true
@@ -94,7 +116,8 @@ function phade_attrs($obj, $escaped)
                     }
                 }
             } else if ($escaped && $escaped[$key]) {
-                array_push($buf, $key . '=\"' . $val . '\"');
+                if($val!==false)
+                    array_push($buf, $key . '=\"' . $val . '\"');
             } elseif (false !== $val) {
                 $val = $val == '' ? $key : $val;
                 array_push($buf, $key . '=\"' . $val . '\"');
@@ -128,4 +151,77 @@ function phade_escape($html = '')
 function phade_join_classes($val)
 {
     return is_array($val) ? join(array_filter(array_map($val, 'phade_join_classes'), 'strlen'), ' ') : $val;
+}
+function phade_convertJStoPHP($src, $type ='') {
+    $characterParser = new CharacterParser();
+
+    /**
+     * (\bvar\s+\b|.+\+\s)([\w\d]+).*? captures var (var), 'asd' + (var)
+     */
+    if (defined('PHADE_TEST_DEBUG') && PHADE_TEST_DEBUG)
+        echo __METHOD__,': ', $src,"\n";
+    $isVar = $newVar = true;
+    $phpSrc='';
+    if ($characterParser->isNull($src))
+        return '';
+    if ('var' == $type)
+        return '$' . $src;
+
+    if (ctype_digit($src) || __()->isNumber($src)) {
+        return $src;
+    }
+
+    if ($src != ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src)))
+        return $code;
+
+    if ( $characterParser->isType($src))
+        return "'$src'";
+    if ($characterParser->isNull($src))
+        return '';
+
+    for($i = 0,$len = strlen($src);$i<$len;++$i) {
+        if ($isVar && $newVar && " " != $src[$i] && !$characterParser->isNonChar($src[$i])) {
+            $phpSrc .= '$';
+            $isVar = $newVar = false;
+        } elseif ($characterParser->isNonChar($src[$i])) {
+            $isVar = false;
+            $newVar = false;
+        } elseif (" " == $src[$i]) {
+            $newVar = $isVar = true;
+        }
+        $phpSrc .= $src[$i];
+    }
+
+    if (strpos($phpSrc,'||') !== false) {
+        $array = explode('||', $phpSrc);
+        array_walk($array, function(&$value, $key) { $value = trim($value); });
+        /**
+         * @var int $i
+         */
+        if (($i = __()->indexOf($array,'$undefined'))>=0) {
+            unset($array[$i]);
+            return array_pop($array);
+        }
+        $phpSrc =  $array[0] .'?'. $array[0] .':'.$array[1];
+    } else {
+        if ($type == 'array')
+            return $src;
+        elseif ($type == 'keyvaluearray') {
+            $temp = array();
+            $strtuples = explode(', ', $src);
+            for($i = 0; $i < sizeof($strtuples);$i++) {
+                $tuples = explode(':', $strtuples[$i]);
+                if ($i==0)
+                    $tuples[0] = "{'" . trim(substr($tuples[0],1)) . "'";
+                else
+                    $tuples[0] = "'".trim($tuples[0])."'";
+                $temp[] = implode(' => ', $tuples);
+            }
+            $src = implode(',', $temp);
+            return str_replace('}',']',str_replace('{','[', $src));
+        }
+        $phpSrc = preg_replace('/(\".+\")\ *(\+\ *(\d+))/','$1."$3"',$phpSrc);
+        return $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
+    }
+    return $phpSrc;
 }

@@ -5,8 +5,8 @@ namespace Phade\Nodes;
 
 class Attrs extends Node{
     private $attrs = [];
-    public function setAttribute($name, $val, $escaped = '') {
-        $attr = ['name'=> $name, 'val' => $val, 'escaped' => $escaped];
+    public function setAttribute($name, $val, $escaped = '',$code=false) {
+        $attr = ['name'=> $name, 'val' => $val, 'escaped' => $escaped,'code'=>$code];
         $this->attrs[] = $attr;
         return $this;
     }

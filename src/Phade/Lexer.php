@@ -489,6 +489,7 @@ class Lexer
 
     /**
      * Code.
+     * Handles p= and similar tags
      */
     private function code()
     {
@@ -550,9 +551,8 @@ class Lexer
                     try {
                         $this->assertExpression($val);
                         if ($str[$i] == ' ' || $str[$i] == "\n" || $str[$i] == "\r\n") {
-                            echo "\ntest>".$str[$i]."<";
                             for ($x = $i; $x < mb_strlen($str); $x++) {
-                                echo "\ntest2>".$str[$x]."<";
+                                //Check if quote is set. Needed to support preceding spaces before value
                                 if ($quote && $str[$x] != ' ' && $str[$x] != "\n" && $str[$x] != "\r\n") {
                                     if (CharacterParser::isPunctuator($str[$x]) && $str[$x] != '"' && $str[$x] != "'")
                                         return false;
@@ -572,10 +572,14 @@ class Lexer
 
             for ($i = 0; $i <= mb_strlen($str); ++$i) {
                 if ($isEndOfAttribute($i)) {
-                    echo "\n endofattr";
                     $val = trim($val);
-                    if (isset($val[0]) && $val[0] == '"')
-                        $val = trim($val,'"');
+                    echo "\n";var_dump($val);
+                    $code = !preg_match('/(^[\'"].*[\'"]$)/',$val);
+                    if (isset($val[0]) && $val[0] == '"' && substr($val,strlen($val)-3,3) == '. "') {
+                        $val=substr($val,1,strlen($val)-1);
+                        // Special case of "somestring"+somevarorstatic
+                    } elseif(isset($val[0]) && $val[0] == '"' && (strpos($val,'+')?strpos($val,'"')>strpos($val,'+'):true))
+                        $val = trim($val, '"');
                     elseif (isset($val[0]) && $val[0] == '\'' && $val[strlen($val)-1] == '\'')
                         $val = trim($val,'\'');
                     elseif ('false' == $val)
@@ -589,7 +593,11 @@ class Lexer
                     /*if(is_string($val))
                         $val = preg_replace('/\(+(.*?)\)+/','$1',$val)*/
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-                    $token->attrs[] = ['name' => trim($key),'val' => is_string($val) && !preg_match('/\[.*\]/',$val)?htmlspecialchars($val):$val, 'escaped' => $escapedAttr];
+                    $token->attrs[] = [
+                        'name' => trim($key)
+                        ,'val' => (is_string($val) && !preg_match('/(\[.*\])|(.*\bphade_escape\b.*)/',$val))&&!$code?htmlspecialchars($val):$val
+                        , 'escaped' => $escapedAttr
+                        ,'code'=>$code];
                     $quote = $key = $val = '';
                     $loc = 'key';
                     $escapedAttr = false;
@@ -641,7 +649,7 @@ class Lexer
                             }
                             break;
                     }
-                    echo "\nattr: key:$key , val:$val, loc:$loc, quote:$quote;";
+                    echo "\nattr: $key, $val, $loc, $quote";
                 }
             }
             if (isset($this->input[0]) && '/' == $this->input[0]) {

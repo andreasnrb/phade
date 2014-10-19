@@ -52,7 +52,7 @@ class Jade
     public function compile($str, $scope = [], $options = [])
     {
 
-        $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => false];
+        $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => false, 'scope'=>$scope];
         $options = array_merge($default, $options);
         if (is_array($options))
             $options = (object)$options;
