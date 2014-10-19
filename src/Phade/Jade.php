@@ -18,7 +18,7 @@ class Jade
      */
     public function render($str, $scope = [], $options = [], $callback = null)
     {
-        $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => true, 'cache' => null];
+        $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => false, 'cache' => null];
         $str = trim($str, "\n");
         $fn = null;
         // support callback API
@@ -52,7 +52,7 @@ class Jade
     public function compile($str, $scope = [], $options = [])
     {
 
-        $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => true];
+        $default = ['filename' => '', 'compileDebug' => false, 'client' => false, 'debug' => false, 'prettyprint' => false];
         $options = array_merge($default, $options);
         if (is_array($options))
             $options = (object)$options;

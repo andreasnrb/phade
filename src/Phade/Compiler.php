@@ -242,7 +242,6 @@ class Compiler {
                     : '$phade_debug[0]["filename"]')
                 . ']);');
         }
-
         // Massive hack to fix our context
         // stack for - else[ if] etc
         if (false === $node->debug && $this->debug) {
@@ -251,7 +250,6 @@ class Compiler {
         }
 
         $this->visitNode($node);
-
         if ($debug) array_push($this->buf, 'array_shift($phade_debug);');
     }
 
@@ -322,11 +320,11 @@ class Compiler {
         $len = sizeof($block->getNodes());
         $escape = $this->escape;
         $pp = $this->pp;
-
         // Pretty print multi-line text
-        if ($pp && $len > 1 && !$escape && $block->getNodes(0)->isText() && $block->getNodes(1)->isText())
+        if ($pp && $len > 1 && !$escape && $block->getNodes(0)->isText() && $block->getNodes(1)->isText()) {
             $this->prettyIndent(1, true);
-        for ($i = 0; $i < $len; ++$i) {
+        }
+        for ($i = 0; $i < $len; $i++) {
             // Pretty print text
             if ($pp && $i > 0 && !$escape && $block->getNodes($i)->isText() && $block->getNodes($i - 1)->isText())
                 $this->prettyIndent(1, false);
@@ -469,7 +467,7 @@ class Compiler {
         if ($pp && !$tag->isInline())
             $this->prettyIndent(0, true);
 
-        if ((in_array(strtolower($name), $this->selfClosing) || $tag->selfClosing) && !$this->xml) {
+        if ((in_array(strtolower($name), $this->selfClosing) && !$this->xml) || $tag->selfClosing) {
             $this->buffer('<');
             $bufferName();
             $this->visitAttributes($tag->getAttributes());
@@ -486,14 +484,30 @@ class Compiler {
             $bufferName();
             if (sizeof($tag->getAttributes())) $this->visitAttributes($tag->getAttributes());
             $this->buffer('>');
+
+            // Indent after opening tag if possible and if so increase indentation with one
+            /*if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->canInline())
+                $this->prettyIndent(1, true);*/
+
             if ($tag->code) $this->visitCode($tag->code);
+
             $this->visit($tag->block);
 
+            // Indentate standard
             if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->canInline())
                 $this->prettyIndent(0, true);
+            else if ($pp && !$tag->isInline() && 'pre' != $tag->name && !$tag->isEmpty()) {
+                $this->buffer("\n");
+            }
+
             $this->buffer('</');
             $bufferName();
             $this->buffer('>');
+            //Add new line
+            //TODO: Causes extra newlines
+            /*if ($pp && !$tag->isInline() && 'pre' != $tag->name && $tag->isEmpty() && $tag->isBlock()) {
+                $this->buffer("\n");
+            }*/
         }
         if ('pre' == $tag->name) $this->escape = false;
         $this->indents--;
@@ -576,6 +590,8 @@ class Compiler {
             if(strpos($val, '$') !== false)
                 $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';
             if ($code->escape) $val = 'phade_escape(' . $val . ')';
+            if($this->pp)
+                $this->prettyIndent(1,true);
             $this->bufferExpression($val);
         } else {
             $php = $this->convertJStoPHP($code->val);
@@ -639,7 +655,6 @@ class Compiler {
      * @api public
      */
     public function visitAttributes($attrs) {
-
         if (!$attrs)
             return;
         $val = $this->attrs($attrs);
@@ -688,6 +703,7 @@ class Compiler {
                     $escaped[$attr['name']] = false;
                     $attr['val'] = '" . ('. str_replace('+',' . ', $captures[1]) . $this->convertJStoPHP($captures[2], 'var') . ') ."';
                 }
+                //Only add attribute if its value is set
                 array_push($buf, $attr);
             }
         }

@@ -36,6 +36,8 @@ class Tag extends Attrs
         , 'strong'
         , 'sub'
         , 'sup'
+        , 'p'
+        , 'option'
     ];
 
     function __construct($name, $block = null)
@@ -52,6 +54,10 @@ class Tag extends Attrs
         return in_array($this->name, $this->inline);
     }
 
+    public function isEmpty() {
+        $nodes = $this->block->getNodes();
+        return !sizeof($nodes);
+    }
     public function canInline()
     {
         $nodes = $this->block->getNodes();
@@ -69,7 +75,9 @@ class Tag extends Attrs
         };
 
         // Empty tag
-        if (!sizeof($nodes)) return true;
+        if ($this->isEmpty()) {
+            return true;
+        }
 
         // Text-only or inline-only tag
         if (1 == sizeof($nodes)) return $isInline($nodes[0]);

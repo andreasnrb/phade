@@ -64,6 +64,7 @@ class Lexer
             $token = $this->token($type, isset($captures[1]) && mb_strlen($captures[1]) > 0 ? $captures[1] : '');
             return $token;
         }
+        return false;
     }
 
     public function defer($token)
@@ -232,12 +233,17 @@ class Lexer
     private function text()
     {
 
-        if (preg_match('/^([^\.\<][^\n]+)/', $this->input)
+        /*if (preg_match('/^([^\.\<][^\n]+)/', $this->input)
             && !preg_match('/^(?:\| ?| )([^\n]+)/', $this->input)
         ) {
             throw new \Exception('Warning: missing space before text for line ' . $this->getLineno() . ' of jade file.');
-        }
-        $text = $this->scan('/^(?:\| ?| )([^\n]+)/', 'text') or $text = $this->scan('/^([^\.][^\n]+)/', 'text');
+        }*/
+/*        return this.scan(/^(?:\| ?| )([^\n]+)/, 'text') ||
+      this.scan(/^\|?( )/, 'text') ||
+      this.scan(/^(<[^\n]*)/, 'text');*/
+        $text = $this->scan('/^(?:\| ?| )([^\n]+)/', 'text')
+        or $text = $this->scan('/^\|?( )/', 'text') // '/^([^\.][^\n]+)/';
+        or $text = $this->scan('/^(<[^\n]*)/', 'text');
         return $text;
     }
 
@@ -541,19 +547,18 @@ class Lexer
                     }
                     return $str[$i] === ',';
                 } else if ($loc == 'value' && !$state->isNesting()) {
-                    if ($quote == '' && $str[$i] == ' ')
-                        return false;
                     try {
                         $this->assertExpression($val);
                         if ($str[$i] == ' ' || $str[$i] == "\n" || $str[$i] == "\r\n") {
+                            echo "\ntest>".$str[$i]."<";
                             for ($x = $i; $x < mb_strlen($str); $x++) {
-                                if ($str[$x] != ' ' && $str[$x] != "\n" && $str[$x] != "\r\n") {
+                                echo "\ntest2>".$str[$x]."<";
+                                if ($quote && $str[$x] != ' ' && $str[$x] != "\n" && $str[$x] != "\r\n") {
                                     if (CharacterParser::isPunctuator($str[$x]) && $str[$x] != '"' && $str[$x] != "'")
                                         return false;
                                     else
                                         return true;
                                 }
-                                return false;
                             }
                         }
                         return $str[$i] === ',';
@@ -565,8 +570,9 @@ class Lexer
 
             $this->lineno += sizeof(mb_split("\n", $str)) - 1;
 
-            for ($i = 0; $i <= mb_strlen($str); $i++) {
+            for ($i = 0; $i <= mb_strlen($str); ++$i) {
                 if ($isEndOfAttribute($i)) {
+                    echo "\n endofattr";
                     $val = trim($val);
                     if (isset($val[0]) && $val[0] == '"')
                         $val = trim($val,'"');
@@ -576,15 +582,15 @@ class Lexer
                         $val = false;
                     elseif ('true' == $val)
                         $val = true;
-                    $val = trim($val);
-                    if ($val[strlen($val)-1] == '.')
+                    if (isset($val[strlen($val)-1]) && $val[strlen($val)-1] == '.')
                         $val .= '"';
                     if ($val) $this->assertExpression($val);
-                    $key = trim($key);
-                    $val = preg_replace('/\(+(.*?)\)+/','$1',$val);
+                    //Only clean up if attribute value is a string
+                    /*if(is_string($val))
+                        $val = preg_replace('/\(+(.*?)\)+/','$1',$val)*/
                     $key = preg_replace('/^[\'"]|[\'"]$/', '', $key);
-                    $token->attrs[] = ['name' => $key,'val' => $val, 'escaped' => $escapedAttr];
-                    $key = $val = '';
+                    $token->attrs[] = ['name' => trim($key),'val' => is_string($val)?htmlspecialchars($val):$val, 'escaped' => $escapedAttr];
+                    $quote = $key = $val = '';
                     $loc = 'key';
                     $escapedAttr = false;
                 } else {
@@ -599,7 +605,7 @@ class Lexer
                             }
                             break;
                         case 'key':
-                            if ($key == '' && (isset($str[$i]) && ($str[$i] === '"' || $str[$i] === "'"))) {
+                            if ($key == '' && (isset($str[$i]) && ($str[$i] == '"' || $str[$i] == "'"))) {
                                 $loc = 'key-char';
                                 $quote = $str[$i];
                             } else if (isset($str[$i]) && ($str[$i] === '!' || $str[$i] === '=')) {
@@ -608,8 +614,9 @@ class Lexer
                                 if ($str[$i] !== '=')
                                     throw new \Exception('Unexpected character ' . $str[$i] . ' expected `=`');
                                 $loc = 'value';
+                                $quote = '';
                                 $state = $characterParser->defaultState();
-                            } elseif (isset($str[$i])) {
+                            } elseif (isset($str[$i]) && $str[$i]!=' ') {
                                 $key .= $str[$i];
                             }
 
@@ -629,11 +636,12 @@ class Lexer
                             $interpolatable .= $str[$i];
                             if (!$state->isString()) {
                                 $loc = 'value';
-                                $interpolatable = trim($interpolatable,"'");
+                                //$interpolatable = trim($interpolatable,"'");
                                 $val .= $this->interpolate($interpolatable, $quote);
                             }
                             break;
                     }
+                    echo "\nattr: key:$key , val:$val, loc:$loc, quote:$quote;";
                 }
             }
             if (isset($this->input[0]) && '/' == $this->input[0]) {
@@ -809,10 +817,10 @@ class Lexer
         or $next = $this->id()
         or $next = $this->className()
         or $next = $this->attrs()
+        or $next = $this->text()
         or $next = $this->indent()
         or $next = $this->comment()
         or $next = $this->colon()
-        or $next = $this->text()
         or $next = $this->dot()
         or $next = $this->fail();
 
