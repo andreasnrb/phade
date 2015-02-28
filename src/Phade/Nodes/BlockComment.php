@@ -10,5 +10,9 @@ namespace Phade\Nodes;
 
 
 class BlockComment extends Node{
-
+	public function __construct($val, $block, $buffer) {
+		$this->val = $val;
+		$this->block = $block;
+		$this->buffer = $buffer;
+	}
 } 

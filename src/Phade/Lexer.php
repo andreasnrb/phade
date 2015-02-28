@@ -160,8 +160,6 @@ class Lexer
      */
     private function comment()
     {
-
-
         if (preg_match('/^ *\/\/(-)?([^\n]*)/', $this->input, $captures)) {
             $this->consume(mb_strlen($captures[0]));
             $token = $this->token('comment', isset($captures[2]) ? $captures[2] : '');
@@ -434,21 +432,21 @@ class Lexer
             switch ($type) {
                 case 'if':
                     $this->assertExpression($php);
-                    $php = 'if (' . $php . '):';
+                    $php = 'if (' . $php . ')';
                     break;
                 case 'unless':
                     $this->assertExpression($php);
-                    $php = 'if (!(' . $php . ')):';
+                    $php = 'if (!(' . $php . '))';
                     break;
                 case 'else if':
                     $this->assertExpression($php);
-                    $php = 'else if (' . $php . '):';
+                    $php = 'else if (' . $php . ')';
                     break;
                 case 'else':
                     if ($php && trim($php)) {
                         throw new \Exception('`else` cannot have a condition, perhaps you meant `else if`');
                     }
-                    $php = 'else:';
+                    $php = 'else';
                     break;
             }
 
@@ -686,7 +684,6 @@ class Lexer
 
     private function indent()
     {
-
         // established regexp
         if ($this->indentRe) {
             preg_match($this->indentRe, $this->input, $captures);
@@ -707,7 +704,6 @@ class Lexer
         }
         if ($captures) {
             $indents = mb_strlen($captures[1]);
-
             ++$this->lineno;
             $this->consume($indents + 1);
 

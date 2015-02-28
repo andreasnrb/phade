@@ -331,7 +331,6 @@ class Parser
     {
         $tok = $this->expect('comment');
 
-
         if ('indent' == $this->peek()->getType()) {
             $node = new BlockComment($tok->val, $this->block(), $tok->buffer);
         } else {
@@ -674,7 +673,6 @@ class Parser
     {
         $dot = true;
         $tag->line = $this->line();
-
         $seenAttrs = false;
         // (attrs | class | id)*
         while (true) {

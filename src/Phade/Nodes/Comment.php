@@ -10,4 +10,8 @@ namespace Phade\Nodes;
 
 
 class Comment extends Node{
+	public function __construct($val, $buffer) {
+		$this->val = $val;
+		$this->buffer = $buffer;
+	}
 }

@@ -9,6 +9,7 @@ class Jade
     private $cache;
 
     /**
+     * Takes a Jade string and converts it to PHP using the provided sc
      * @param $str
      * @param array $scope
      * @param array $options
@@ -79,6 +80,7 @@ class Jade
             ob_start();
             extract($locals);
             extract($scope);
+	        file_put_contents(dirname(__FILE__).'/test.php',$fn);
             $result = eval($fn);
             eval('?>' . $result);
             return ob_get_flush();
@@ -126,7 +128,7 @@ class Jade
                 //, '$self = $locals;' ."\n"
                 , $php
                 //    : $this->addWith('$locals', $php, $globals)) . ';'
-                , 'return join("\n", $buf);']);
+                , 'return join(' .($options->prettyprint?"\"\n\"":'""').', $buf);']);
         } catch (\Exception $ex) {
             /**
              * @var Parser $context

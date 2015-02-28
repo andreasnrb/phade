@@ -64,8 +64,9 @@ class Compiler {
     private $lastBuffered;
     private $bufferStartChar;
     private $escape;
+	private $vars=[];
 
-    /**
+	/**
      * Initialize `Compiler` with the given `node`.
      *
      * @param $node
@@ -101,7 +102,7 @@ class Compiler {
         if ($this->pp) array_push($this->buf, '$phade_indent = [];');
         $this->lastBufferedIdx = -1;
         $this->visit($this->node);
-        return join("\n", $this->buf);
+        return join($this->pp?"\n":'', $this->buf);
     }
 
     /**
@@ -126,7 +127,7 @@ class Compiler {
     public function buffer($str, $interpolate = false) {
         if ($interpolate) {
             preg_match('/(\\\\)?([#!]){((?:.|\n)*)/sim', $str, $match, PREG_OFFSET_CAPTURE);
-            if ($match) {
+	        if ($match) {
                 /** match.index */
                 $this->buffer(mb_substr($str,0, $match[0][1]), false);
                 if ($match[1][0]) { // escape
@@ -195,17 +196,17 @@ class Compiler {
             $this->buffer('" . ' .$this->parseCode($src). ' . "', false);
             return;
         }
-        if ($this->lastBufferedIdx == sizeof($this->buf)) {
+        if ($this->lastBufferedIdx == sizeof($this->buf)-1) {
             if ($this->lastBufferedType === 'text') $this->lastBuffered .= '" . ';
             $this->lastBufferedType = 'code';
-            $this->lastBuffered .= $this->parseCode($src) . '';
+            $this->lastBuffered .= $this->parseCode($src);
             $this->buf[$this->lastBufferedIdx - 1] = 'array_push($buf, ' . $this->bufferStartChar . $this->lastBuffered . ');';
         } else {
             array_push($this->buf, 'array_push($buf, ' . $this->parseCode($src) . ');');
             $this->lastBufferedType = 'code';
             $this->bufferStartChar = '';
             $this->lastBuffered = '(' . $src . ')';
-            $this->lastBufferedIdx = mb_strlen($this->buf);
+            $this->lastBufferedIdx = sizeof($this->buf);
         }
     }
 
@@ -467,7 +468,7 @@ class Compiler {
         if ($pp && !$tag->isInline())
             $this->prettyIndent(0, true);
 
-        if ((in_array(strtolower($name), $this->selfClosing) && !$this->xml) || $tag->selfClosing) {
+	    if ((in_array(strtolower($name), $this->selfClosing) && !$this->xml) || $tag->selfClosing) {
             $this->buffer('<');
             $bufferName();
             $this->visitAttributes($tag->getAttributes());
@@ -544,9 +545,10 @@ class Compiler {
      * @api public
      */
     public function visitComment($comment){
-        if (!$comment->buffer) return;
+        if (!$comment->buffer) {	    $this->buffer("\n");return;}
         if ($this->pp) $this->prettyIndent(1, true);
         $this->buffer('<!--' . $comment->val . '-->');
+	    $this->buffer("\n");
     }
 
     /**
@@ -585,8 +587,10 @@ class Compiler {
         // since they are usually flow control
         // Buffer code
         if ($code->buffer) {
-            $val = trim($code->val);
-            $val = $this->parseCode($val);
+	        $val = trim($code->val);
+	        if(in_array($val,$this->vars))
+		        $val = "\$$val";
+	        $val = $this->parseCode($val);
             if (strpos($val, '$') !== false) $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';
             if ($code->escape) $val = 'phade_escape(' . $val . ')';
             if ($this->pp) $this->prettyIndent(1, true);
@@ -612,10 +616,11 @@ class Compiler {
     private function parseCode($code) {
         if ($this->isConstant($code))
             return $code;
+
         if (preg_match('/.*\((?<!\$)([a-zA-Z]+)\).*/', $code, $captures)) {
-            $inner_code = $captures[1];
+	        $inner_code = $captures[1];
             $val = "\$".$inner_code;
-            $code = str_replace($inner_code, $val, $code);
+	        $code = str_replace($inner_code, $val, $code);
         }
         return $code;
     }
@@ -627,13 +632,21 @@ class Compiler {
      * @api public
      */
     public function visitEach($each){
-        array_push($this->buf,
-            '    if (is_array($' . $each->obj . ') && count($' . $each->obj . ') > 0) {'."\n");
-        array_push($this->buf,
-            '      foreach ($' . $each->obj . ' as $' . $each->val . ') {'."\n");
+	    if(strpos($each->obj,'Object.keys')===false)
+	        array_push($this->buf,
+                '    if (is_array($' . $each->obj . ') && count($' . $each->obj . ') > 0) {'."\n");
+	    $this->vars[]=$each->val;
+	    if(strpos($each->obj,'Object.keys')===false)
+		    array_push($this->buf,
+			    '      foreach ($' . $each->obj . ' as '.($each->key?'$'.$each->key.' => ':'').' $' . $each->val . ') {'."\n");
+		else
+		    array_push($this->buf,
+            '$phade_interopt=array_keys('.preg_replace('/Object\.keys\(([\w\d]+)\)/','\$$1',$each->obj).');
+             foreach ($phade_interopt as $' . $each->val . ') {'."\n");
         $this->visit($each->block);
-        array_push($this->buf,
-            '      }'."\n");
+	    if(strpos($each->obj,'Object.keys')===false)
+	        array_push($this->buf,
+                '      }'."\n");
         if (!$each->alternative) {
             array_push($this->buf,
             '    }'."\n");
@@ -741,7 +754,8 @@ class Compiler {
         if (@eval($src)) {
             return false;
         }
-
+	    if(in_array($src,$this->vars))
+	        return false;
         if (preg_match('/\d+/', $src))
             return false;
         return true;
@@ -757,31 +771,37 @@ class Compiler {
     }
 
     private function convertJStoPHP($src, $type ='') {
-
         /**
          * (\bvar\s+\b|.+\+\s)([\w\d]+).*? captures var (var), 'asd' + (var)
          */
         if (defined('PHADE_TEST_DEBUG') && PHADE_TEST_DEBUG)
-            echo __METHOD__,': ', $src,"\n";
+            echo __METHOD__,': ', $src, " ",$type,"\n";
         $isVar = $newVar = true;
         $phpSrc='';
         if ($this->characterParser->isNull($src))
             return '';
         if ('var' == $type)
             return '$' . $src;
-
         if (ctype_digit($src) || __()->isNumber($src)) {
             return $src;
         }
-
-        if ($src != ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src)))
-            return $code;
-
+        if ($src != ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src))) {
+	        if(preg_match('/var\s+([\w\d]+)/', $src, $matches))
+	            $this->vars[]=$matches[1];
+	        if(preg_match('/var.*(\{(.+)\});?/', $src, $matches)) {
+		        $array = array_map('trim',explode(',', $matches[2] ));
+		        $temp=[];
+		        foreach($array as $item)
+		            $temp[]=preg_replace('/([\w\d]+):\s*(.+)/','"$1"=>$2', $item);
+		        $array = '['.join(',',$temp).']';
+		        $code =preg_replace('/(.*)(\{.+\})(.*)/',"\$1$array\$3;", $code);
+	        }
+	        return trim($code,";").';';
+        }
         if ( $this->characterParser->isType($src))
             return "'$src'";
         if ($this->characterParser->isNull($src))
             return '';
-
         for($i = 0,$len = strlen($src);$i<$len;++$i) {
             if ($isVar && $newVar && " " != $src[$i] && !$this->characterParser->isNonChar($src[$i])) {
                 $phpSrc .= '$';
@@ -794,8 +814,10 @@ class Compiler {
             }
             $phpSrc .= $src[$i];
         }
+	    if(preg_match('/(\$[\w\d]+)\.length/',$phpSrc))
+		    $phpSrc = preg_replace('/(\$[\w\d]+)\.length/','sizeof($1)',$phpSrc);
 
-        if (strpos($phpSrc,'||') !== false) {
+	    if (strpos($phpSrc,'||') !== false) {
             $array = explode('||', $phpSrc);
             array_walk($array, function(&$value, $key) { $value = trim($value); });
             /**
@@ -806,7 +828,23 @@ class Compiler {
                 return array_pop($array);
             }
             $phpSrc =  $array[0] .'?'. $array[0] .':'.$array[1];
-        } else {
+        } else if(strpos($phpSrc,'if')!==false){
+	        preg_match("/(if|switch) \s?(.+)/", $src, $matches);
+	        if($this->isConstant($matches[2]))
+		        $var = $matches[2];
+	        else
+		        $var = '$'.$matches[2];
+	        if(preg_match('/([\w\d]+)\.length/',$var))
+		        $var = preg_replace('/([\w\d]+)\.length/','sizeof(\$$1)',$var);
+			else if(preg_match('/([\w\d]+)[\s!=]+|.+[\s!=]+([\w\d]+)/', $var, $matches))
+				if($matches[1])
+					$var=str_replace($matches[1],'$'.$matches[1],$var);
+		        else
+					$var=str_replace($matches[2],'$'.$matches[2],$var);
+		    return preg_replace("/(if|switch) \s?(.+)/", "$1 (".$var.")", $src);
+	    } else if(strpos($phpSrc,'else')!==false){
+	        return $src;
+        }else {
             if ($type == 'array')
                 return $src;
             elseif ($type == 'keyvaluearray') {
