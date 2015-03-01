@@ -511,42 +511,36 @@ class Parser
     }
 
     /**
-     * include$block?
+     * include
      */
     private function parseInclude()
     {
-        return new Node();
-        /*
-        var path = $this->resolvePath($this->expect('include')->val.trim(), 'include');
+	    $includeDir = dirname($this->filename);
+	    $tok=$this->expect('include');
+	    $path = $includeDir . DIRECTORY_SEPARATOR . $tok->val;
+	    if(strpos($path,'.')===false && substr($path, strlen($path)-5) != '.jade')
+		    $path .='.jade';
+	    else
+		    return new Literal(file_get_contents($path));
+	    $str = file_get_contents($path);
+	    echo $str;
+	    $parser = new Parser($str,$path,$this->options);
+	    $parser->blocks = $this->blocks;
+	    $parser->mixins = $this->mixins;
+	    $this->context($parser);
+	    $ast = $parser->parse();
+	    $this->context();
+	    $ast->filename = $path;
 
-        // non-jade
-        if ('.jade' != path.substr(-5)) {
-            var str = fs.readFileSync(path, 'utf8').replace(/\r/g, '');
-          var ext = extname(path).slice(1);
-          if (filters.exists(ext)) str = filters(ext, str, { filename: path });
-          return new Literal(str);
-        }
+	    if ('indent' == $this->peek()->getType()) {
+		    $ast->push($this->block());
+	    }
 
-        var str = fs.readFileSync(path, 'utf8');
-        var parser = new $this->constructor(str, path, $this->options);
-        parser.blocks = utils.merge({}, $this->blocks);
-
-        parser.mixins = $this->mixins;
-
-        $this->context(parser);
-        var ast = parser.parse();
-        $this->context();
-        ast.filename = path;
-
-        if ('indent' == $this->peek()->getType()) {
-            ast.includeBlock().push($this->block());
-        }
-
-        return ast;/*/
+	    return $ast;
     }
 
     /**
-     * call ident$block
+     * call block
      */
 
     private function parseCall()
@@ -566,7 +560,7 @@ class Parser
     }
 
     /**
-     * mixin$block
+     * mixin
      */
 
     private function parseMixin()

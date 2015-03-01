@@ -81,7 +81,7 @@ class Jade
             ob_start();
             extract($locals);
             extract($scope);
-	        file_put_contents(dirname(__FILE__).'/test.php',$fn);
+	        //file_put_contents(dirname(__FILE__).'/test.php',$fn);
             $result = eval($fn);
             eval('?>' . $result);
             return ob_get_flush();

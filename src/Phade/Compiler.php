@@ -756,7 +756,8 @@ class Compiler {
     private function isConstant($src) {
 	    if(in_array(strtolower($src),['null','true','false']))
 		    return true;
-
+		if(is_numeric($src))
+			return true;
         if (strpos($src, '$') !== false)
             return false;
         if (@eval($src)) {
@@ -810,7 +811,7 @@ class Compiler {
 		        $code =preg_replace('/(.*)(\{.+\})(.*)/',"\$1$array\$3;", $code);
 	        }
 	        // handles $test = local, converts to $test = $local
-	        $code=preg_replace('/(\$[\w\d]+\s=\s)([\w\d]+)/','$1\$$2', $code);
+	        $code=preg_replace('/(\$[\w\d]+\s=\s)([a-zA-Z]+)/','$1\$$2', $code);
 	        return trim($code,";").';';
         }
         if ( $this->characterParser->isType($src))

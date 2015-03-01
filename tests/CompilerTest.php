@@ -933,7 +933,7 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals("<p>awesome tobi</p><p>lame jane</p><p>loki</p>", $this->jade->render($str));
     }
-/*
+
     public function testIncludeBlock()
     {
         $str = join("\n", [
@@ -944,6 +944,6 @@ class CompilerTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $this->assertEquals("<html><head><script src=\"/jquery.js\"></script><script src=\"/caustic.js\"></script><scripts src=\"/app.js\"></scripts></head></html>"
-            , $this->jade->render($str, "{ filename: " . __DIR__ . DIRECTORY_SEPARATOR . 'jade.test.js' . "}"));
-    }*/
+            , $this->jade->render($str,[], ["filename"=>__DIR__ . DIRECTORY_SEPARATOR . 'jade.test.js']));
+    }
 }

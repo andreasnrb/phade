@@ -93,13 +93,13 @@ class JadeTest extends \PHPUnit_Framework_TestCase
     }
 
     public function testAssignment()
-    {/*
+    {
         $this->assertEquals('<div>5</div>', $this->jade->render("- var a = 5;\ndiv= a"));
         $this->assertEquals('<div>5</div>', $this->jade->render("- var a = 5\ndiv= a"));
         $this->assertEquals('<div>foo bar baz</div>', $this->jade->render("- var a = \"foo bar baz\"\ndiv= a"));
         $this->assertEquals('<div>5</div>', $this->jade->render("- var a = 5      \ndiv= a"));
         $this->assertEquals('<div>5</div>', $this->jade->render("- var a = 5      ; \ndiv= a"));
-*/
+
         $fn = $this->jade->compile("- var test = local\np=test");
         $this->assertEquals('<p>bar</p>', $fn(["local" => 'bar']));/**/
     }
