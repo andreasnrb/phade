@@ -571,7 +571,6 @@ class Lexer
             for ($i = 0; $i <= mb_strlen($str); ++$i) {
                 if ($isEndOfAttribute($i)) {
                     $val = trim($val);
-                    echo "\n";var_dump($val);
                     $code = !preg_match('/(^[\'"].*[\'"]$)/',$val);
                     if (isset($val[0]) && $val[0] == '"' && substr($val,strlen($val)-3,3) == '. "') {
                         $val=substr($val,1,strlen($val)-1);

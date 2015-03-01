@@ -58,12 +58,6 @@ function phade_attrs($obj, $escaped, $scope=[])
             $attr = $obj[$i];
             $key = $attr['name'];
             $val = $attr['val'];
-            echo "\n ----- \n";
-            var_dump($attr);            echo "\n ------ \n";
-            var_dump($val);            echo "\n ------ \n";
-            var_dump($scope);            echo "\n ------ \n";
-//            $test=array_key_exists($val,$scope);
-//            var_dump($test);            echo "\n ------ \n";
             if(isset($attr['code']) && $attr['code']) {
                 if(in_array($val, ['false', 'null', 'undefined'],true)) {
                     $val = false;

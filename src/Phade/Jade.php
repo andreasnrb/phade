@@ -58,6 +58,7 @@ class Jade
         if (is_array($options))
             $options = (object)$options;
         $filename = isset($options->filename) ? json_encode($options->filename) : '';
+	    $options->scope = $scope;
         if ($options->compileDebug) {
             $fn = join("\n", [
                 '$phade_debug = [["lineno" => 1, "filename" => ' . $filename . ' ]];'

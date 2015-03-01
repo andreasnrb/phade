@@ -87,6 +87,8 @@ class Compiler {
         $this->inMixin = false;
         $this->indents = 0;
         $this->parentIndents = 0;
+	    if($options->scope)
+		    $this->vars = array_keys($options->scope);
         if (isset($options->doctype) && !empty($options->doctype))
            $this->setDoctype($options->doctype);
     }
@@ -588,7 +590,7 @@ class Compiler {
         // Buffer code
         if ($code->buffer) {
 	        $val = trim($code->val);
-	        if(in_array($val,$this->vars))
+	        if(!$this->isConstant($val) && (in_array($val,$this->vars) || preg_match("/^[^\W][\w\d]+[^\W]$/", $val)))
 		        $val = "\$$val";
 	        $val = $this->parseCode($val);
             if (strpos($val, '$') !== false) $val = '(null == ($phade_interp = ' . $val . ') ? "" : $phade_interp)';
@@ -619,7 +621,10 @@ class Compiler {
 
         if (preg_match('/.*\((?<!\$)([a-zA-Z]+)\).*/', $code, $captures)) {
 	        $inner_code = $captures[1];
-            $val = "\$".$inner_code;
+	        if(!$this->isConstant($inner_code))
+	            $val = "\$".$inner_code;
+	        else
+		        $val = $inner_code;
 	        $code = str_replace($inner_code, $val, $code);
         }
         return $code;
@@ -749,6 +754,9 @@ class Compiler {
      * @return bool
      */
     private function isConstant($src) {
+	    if(in_array(strtolower($src),['null','true','false']))
+		    return true;
+
         if (strpos($src, '$') !== false)
             return false;
         if (@eval($src)) {
@@ -758,6 +766,8 @@ class Compiler {
 	        return false;
         if (preg_match('/\d+/', $src))
             return false;
+	    if(strpos($src,'"') ===false && strtoupper($src) != $src)
+		    return false;
         return true;
     }
 
@@ -776,7 +786,7 @@ class Compiler {
          */
         if (defined('PHADE_TEST_DEBUG') && PHADE_TEST_DEBUG)
             echo __METHOD__,': ', $src, " ",$type,"\n";
-        $isVar = $newVar = true;
+        $isVar = $newVar = false;
         $phpSrc='';
         if ($this->characterParser->isNull($src))
             return '';
@@ -785,9 +795,12 @@ class Compiler {
         if (ctype_digit($src) || __()->isNumber($src)) {
             return $src;
         }
+	    // detect if the src string contains a variable
         if ($src != ($code = preg_replace('/var\s+([\w\d]+)/', '\$$1',$src))) {
+	        // extracts a variable name and stores it in the list of variable names
 	        if(preg_match('/var\s+([\w\d]+)/', $src, $matches))
 	            $this->vars[]=$matches[1];
+	        // detect a javascript object array {test:'test'} and convert it to an PHP array ['test'=>'test']
 	        if(preg_match('/var.*(\{(.+)\});?/', $src, $matches)) {
 		        $array = array_map('trim',explode(',', $matches[2] ));
 		        $temp=[];
@@ -796,12 +809,15 @@ class Compiler {
 		        $array = '['.join(',',$temp).']';
 		        $code =preg_replace('/(.*)(\{.+\})(.*)/',"\$1$array\$3;", $code);
 	        }
+	        // handles $test = local, converts to $test = $local
+	        $code=preg_replace('/(\$[\w\d]+\s=\s)([\w\d]+)/','$1\$$2', $code);
 	        return trim($code,";").';';
         }
         if ( $this->characterParser->isType($src))
             return "'$src'";
         if ($this->characterParser->isNull($src))
             return '';
+            /*
         for($i = 0,$len = strlen($src);$i<$len;++$i) {
             if ($isVar && $newVar && " " != $src[$i] && !$this->characterParser->isNonChar($src[$i])) {
                 $phpSrc .= '$';
@@ -813,13 +829,13 @@ class Compiler {
                 $newVar = $isVar = true;
             }
             $phpSrc .= $src[$i];
-        }
-	    if(preg_match('/(\$[\w\d]+)\.length/',$phpSrc))
-		    $phpSrc = preg_replace('/(\$[\w\d]+)\.length/','sizeof($1)',$phpSrc);
-
-	    if (strpos($phpSrc,'||') !== false) {
+        }*/
+	    $phpSrc = $src;
+	    if(preg_match('/\$?([\w\d]+)\.length/',$phpSrc))
+		    $phpSrc = preg_replace('/\$?([\w\d]+)\.length/','sizeof(\$$1)',$phpSrc);
+	    if (strpos($phpSrc,'||') !== false && strpos($phpSrc,'if') === false) {
             $array = explode('||', $phpSrc);
-            array_walk($array, function(&$value, $key) { $value = trim($value); });
+            array_walk($array, function(&$value, $key) { $value = trim($value); $value=$this->isConstant($value) || $value[0]=='$'?$value:"\$$value"; });
             /**
              * @var int $i
              */
@@ -828,22 +844,28 @@ class Compiler {
                 return array_pop($array);
             }
             $phpSrc =  $array[0] .'?'. $array[0] .':'.$array[1];
-        } else if(strpos($phpSrc,'if')!==false){
-	        preg_match("/(if|switch) \s?(.+)/", $src, $matches);
+        } else if( preg_match("/(if|switch) \s?\(?s*(!?\(?\s*[\w\.\s=!\"\']+\)?)\)?/", $src, $matches)){
 	        if($this->isConstant($matches[2]))
-		        $var = $matches[2];
-	        else
-		        $var = '$'.$matches[2];
+		        $var = trim($matches[2]);
+	        elseif($matches[2][0]!='!')
+		        $var = '$'.trim($matches[2]);
+		    else
+			    $var = trim($matches[2]);
+		    if(($var[0]!='(' && $var[0]!='!') && $var[strlen($var)-1]==')')
+			    $var=trim($var,")");
 	        if(preg_match('/([\w\d]+)\.length/',$var))
-		        $var = preg_replace('/([\w\d]+)\.length/','sizeof(\$$1)',$var);
-			else if(preg_match('/([\w\d]+)[\s!=]+|.+[\s!=]+([\w\d]+)/', $var, $matches))
-				if($matches[1])
-					$var=str_replace($matches[1],'$'.$matches[1],$var);
-		        else
-					$var=str_replace($matches[2],'$'.$matches[2],$var);
-		    return preg_replace("/(if|switch) \s?(.+)/", "$1 (".$var.")", $src);
-	    } else if(strpos($phpSrc,'else')!==false){
-	        return $src;
+		        $var = preg_replace('/\$?([\w\d]+)\.length/','sizeof(\$$1)',$var);
+			else if(preg_match('/([\w\d]+)[\s!=]+|.+[\s!=]+([\w\d]+)/', $var, $matches)) {
+				if ( $matches[1] ) {
+					$var = str_replace( $matches[1], '$' . $matches[1], $var );
+				} else {
+					$var = str_replace( $matches[2], '$' . $matches[2], $var );
+				}
+			}
+		    $phpSrc= preg_replace("/(if|switch) \s?(.+)/", "$1 (".$var.")", $src);
+		    return $phpSrc;
+	    } else if(strpos($phpSrc,'else')!==false || strpos($phpSrc,'if')!==false){
+	        return $phpSrc;
         }else {
             if ($type == 'array')
                 return $src;
@@ -862,6 +884,8 @@ class Compiler {
                 return str_replace('}',']',str_replace('{','[', $src));
             }
             $phpSrc = preg_replace('/(\".+\")\ *(\+\ *(\d+))/','$1."$3"',$phpSrc);
+			if(in_array($phpSrc, $this->vars))
+				$phpSrc ="\$$phpSrc";
             return $phpSrc = '($phade_interp = (' . $phpSrc . ')) == null ? \'\' : $phade_interp';
         }
         return $phpSrc;
